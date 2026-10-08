@@ -9,7 +9,7 @@ CREATE TABLE account (
                          document    TEXT        NOT NULL UNIQUE,          -- CPF/CNPJ
                          balance     NUMERIC(19,4) NOT NULL DEFAULT 0
                              CHECK (balance >= 0),                 -- invariante no banco
-                         version     BIGINT      NOT NULL DEFAULT 0,       -- optimistic locking
+                         version     integer      NOT NULL DEFAULT 0,       -- optimistic locking
                          created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
                          updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
