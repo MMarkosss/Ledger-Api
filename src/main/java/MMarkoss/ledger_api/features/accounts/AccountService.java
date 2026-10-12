@@ -43,31 +43,32 @@ public class AccountService {
     @Transactional
     public Account createAcc(AccPostReq dto) {
         Account newAcc = buildAccount(dto);
+
         return accRepo.save(newAcc);
     }
 
     @Transactional
     public Account updateAcc (AccPostReq dto) {
         Account updatedAcc = buildAccount(dto);
+
         return accRepo.save(updatedAcc);
     }
 
-    public record PatchedAccount(Account account, Set<String> updatedFields) {}
-
     @Transactional
-    public PatchedAccount partialUpdate (UUID id, AccPatchReq dto) {
+    public Account partialupdate (UUID id, AccPatchReq dto) {
         Account acc = findOneByIdAcc(id);
-        AccountPatchBuilder builder = AccountPatchBuilder.account(acc)
+
+        return AccountPatchBuilder.account(acc)
                 .holderName(dto.holderName())
                 .document(dto.document())
-                .balance(dto.balance());
-        builder.build();
-        return new PatchedAccount(acc, builder.getUpdatedFields());
+                .balance(dto.balance())
+                .build();
     }
 
     @Transactional
     public void deleteAcc (UUID id) {
     Account acc = findOneByIdAcc(id);
+
     accRepo.delete(acc);
     }
 
