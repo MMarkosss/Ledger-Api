@@ -41,18 +41,18 @@ public class AccountController {
         return ResponseEntity.status(201).body(new AccPostRes(acc));
     }
 
-    @PutMapping
-    public ResponseEntity<AccPostRes> putAcc(@RequestBody @Valid AccPostReq dto) {
-        Account acc = accServ.updateAcc(dto);
+    @PutMapping("/{id}")
+    public ResponseEntity<AccUpdateRes> putAcc(@PathVariable UUID id, @RequestBody @Valid AccUpdateReq dto) {
+        Account acc = accServ.updateAcc(id, dto);
 
-        return ResponseEntity.ok(new AccPostRes(acc));
+        return ResponseEntity.ok(new AccUpdateRes(acc));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<AccPostRes> patchAcc (@PathVariable UUID id, @RequestBody @Valid AccPatchReq dto) {
+    public ResponseEntity<AccUpdateRes> patchAcc (@PathVariable UUID id, @RequestBody @Valid AccUpdateReq dto) {
         Account acc = accServ.partialupdate(id,dto);
 
-        return ResponseEntity.ok(new AccPostRes(acc));
+        return ResponseEntity.ok(new AccUpdateRes(acc));
     }
 
     @DeleteMapping("/{id}")

@@ -12,7 +12,7 @@ public record AccPostRes(
         String document
 )
 {
-    public AccPostRes (Account acc) {
+    public AccPostRes(Account acc) {
         this(
                 acc.getId(),
                 acc.getHolderName(),

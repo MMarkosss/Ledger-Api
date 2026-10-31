@@ -1,7 +1,6 @@
 package MMarkoss.ledger_api.features.accounts;
 
-import java.math.BigDecimal;
-import java.util.Objects;
+
 
 
 public class AccountPatchBuilder {
@@ -17,16 +16,6 @@ public class AccountPatchBuilder {
 
     public AccountPatchBuilder holderName(String holderName) {
         if (holderName != null) acc.setHolderName(holderName);
-        return this;
-    }
-
-    public AccountPatchBuilder document(String document) {
-        if (document != null) acc.setDocument(document);
-        return this;
-    }
-
-    public AccountPatchBuilder balance(BigDecimal balance) {
-        if (balance != null) acc.setBalance(balance);
         return this;
     }
 
