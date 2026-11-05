@@ -158,4 +158,13 @@ class AccountContractIT {
         assertThat(body.id()).isEqualTo(id);
         assertThat(body.holderName()).isEqualTo("Novo Nome");
     }
+
+    @Test
+    @DisplayName("Corpo não desserializável retorna 400 (D2)")
+    void deveRejeitarCorpoIlegivel() {
+        post(Map.of("holderName", Map.of("invalido", true), "document", DOC))
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("Requisição inválida");
+    }
 }

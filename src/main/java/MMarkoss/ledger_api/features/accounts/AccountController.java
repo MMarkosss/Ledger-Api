@@ -50,7 +50,7 @@ public class AccountController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<AccUpdateRes> patchAcc (@PathVariable UUID id, @RequestBody @Valid AccUpdateReq dto) {
-        Account acc = accServ.partialupdate(id,dto);
+        Account acc = accServ.updateAcc(id, dto);
 
         return ResponseEntity.ok(new AccUpdateRes(acc));
     }

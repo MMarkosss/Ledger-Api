@@ -21,11 +21,10 @@ public class Account {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
-    @Setter
+    @Setter (AccessLevel.PACKAGE)
     @Column(nullable = false, name = "holder_name")
     private String holderName;
 
-    @Setter
     @Column(nullable = false, unique = true)
     private String document;
 
@@ -33,7 +32,6 @@ public class Account {
     @Column(nullable = false)
     private BigDecimal balance;
 
-    @Setter
     @Version
     @Column(nullable = false)
     private Integer version;

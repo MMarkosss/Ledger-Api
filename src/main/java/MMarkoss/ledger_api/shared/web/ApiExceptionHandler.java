@@ -1,17 +1,18 @@
 package MMarkoss.ledger_api.shared.web;
 
 import MMarkoss.ledger_api.features.accounts.AccountHasLedgerEntriesException;
-import jakarta.persistence.EntityNotFoundException;
+import MMarkoss.ledger_api.features.accounts.AccountNotFoundException;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
-
 import static java.util.stream.Collectors.toMap;
 
 @RestControllerAdvice
@@ -19,13 +20,6 @@ public class ApiExceptionHandler {
 
     // ProblemDetail: dto personalizado do spring para n fazer na mão
 
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ProblemDetail handleNotFound(EntityNotFoundException ex) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        pd.setTitle("Conta não encontrada");
-        return pd;
-    }
 
     // Exceptions do validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -35,6 +29,20 @@ public class ApiExceptionHandler {
         Map<String,String> errors = ex.getFieldErrors().stream()
                 .collect(toMap(FieldError::getField, FieldError::getDefaultMessage, (a, b)->a));
         pd.setProperty("errors", errors);
+        return pd;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleUnreadable(HttpMessageNotReadableException ex) {
+        var pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Corpo da requisição inválido");
+        pd.setTitle("Requisição inválida");
+        return pd;
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ProblemDetail handleNotFound(AccountNotFoundException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        pd.setTitle("Conta não encontrada");
         return pd;
     }
 
