@@ -61,6 +61,14 @@ tópico é tocado.
     versionamento (`git status`, `git diff`, `git log -1`) e sugere o corpo da mensagem
     **em inglês**, referenciando a task e os testes executados. Se a task já estiver
     commitada, o modelo aponta isso em vez de sugerir duplicata.
+13. **Documento vivo de decisões.** Ao encerrar um slice, **depois do debate de
+    arquitetura e antes de marcar o slice como fechado**, revisar
+    `docs/decisions/README.md` e sincronizar os ADRs tocados: status, código/teste
+    correspondente e eventual decisão obsoleta ou `superseded`. Atualizar `README.md`,
+    `TODO.md` e `docs/history/slice-*.md` no mesmo movimento. Se uma task alterar uma
+    decisão antes do fim do slice, o ADR é atualizado imediatamente; a sincronização
+    completa é no fechamento. Nenhum ADR descreve comportamento que não existe; nenhuma
+    decisão implementada fica só no código.
 
 ## Pirâmide de testes (alvo)
 
@@ -77,7 +85,8 @@ Distribuição viva no `TODO.md`. O e2e nasce na transferência e fecha com o ex
 
 - **2026-11-14** — regra 7 revista: teste por task + regressão completa a cada 3 tasks;
   regra 11 anti bang-bang, com granularidade viva acionada pelo humano; regra 12 git
-  humano (modelo só inspeciona e sugere mensagem em inglês).
+  humano (modelo só inspeciona e sugere mensagem em inglês); regra 13 documento vivo de
+  decisões, com mapa em `docs/decisions/README.md` e revisão após o debate de arquitetura.
 - **2026-11-11** — remoção das etapas 5 (Explicação) e 6 (Avaliação) do fluxo; o fluxo
   termina na etapa 4 (Decisão); removido o resquício “build/automação é a última escolha”
   da regra 5.

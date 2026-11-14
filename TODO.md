@@ -8,7 +8,7 @@ R10 gate humano · `accounts` encerrado 2026-11-04 · review externa triada 2026
 R1–R8 pagos 2026-11-09/11 · R7.2 idioma: **EN** (veredito 2026-11-09).
 **Suíte:** 9 unit/contexto / 18 integração / 0 e2e — e2e nasce na transferência · alvo
 70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente.
-**Processo:** regra 7 revista + regras 11/12 em 2026-11-14.
+**Processo:** regra 7 revista + regras 11/12/13 em 2026-11-14.
 
 ## R — ações pré-P11 (R1–R8; morrem ao executar)
 
