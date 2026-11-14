@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.ledger.dto;
+package mmarkoss.ledger_api.features.deposits.dto;
 
 import jakarta.validation.constraints.NotNull;
 

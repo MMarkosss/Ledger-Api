@@ -1,9 +1,9 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.deposits;
 
 import mmarkoss.ledger_api.TestcontainersConfiguration;
 import mmarkoss.ledger_api.features.accounts.dto.AccPostReq;
 import mmarkoss.ledger_api.features.accounts.dto.AccPostRes;
-import mmarkoss.ledger_api.features.ledger.dto.DepositRes;
+import mmarkoss.ledger_api.features.deposits.dto.DepositRes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

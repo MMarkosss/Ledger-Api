@@ -1,8 +1,17 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.deposits;
 
 import mmarkoss.ledger_api.features.accounts.Account;
 import mmarkoss.ledger_api.features.accounts.AccountNotFoundException;
 import mmarkoss.ledger_api.features.accounts.AccountRepository;
+import mmarkoss.ledger_api.features.ledger.EntryDirection;
+import mmarkoss.ledger_api.features.ledger.IdempotencyConflictException;
+import mmarkoss.ledger_api.features.ledger.IdempotencyHash;
+import mmarkoss.ledger_api.features.ledger.LedgerEntry;
+import mmarkoss.ledger_api.features.ledger.LedgerEntryRepository;
+import mmarkoss.ledger_api.features.ledger.Transaction;
+import mmarkoss.ledger_api.features.ledger.TransactionRepository;
+import mmarkoss.ledger_api.features.ledger.TransactionStatus;
+import mmarkoss.ledger_api.features.ledger.TransactionType;
 import org.hibernate.id.uuid.UuidVersion7Strategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

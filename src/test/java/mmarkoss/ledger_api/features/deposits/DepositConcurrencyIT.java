@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.deposits;
 
 import mmarkoss.ledger_api.TestcontainersConfiguration;
 import mmarkoss.ledger_api.features.accounts.dto.AccPostReq;

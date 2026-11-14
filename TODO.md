@@ -9,7 +9,7 @@ R1–R8 pagos 2026-11-09/11 · R7.2 idioma: **EN** (veredito 2026-11-09).
 **Suíte:** 11 unit/contexto / 18 integração / 0 e2e — e2e nasce na transferência · alvo
 70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente.
 **Processo:** regra 7 revista + regras 11/12/13 em 2026-11-14.
-**Split do ledger:** L1 pago 2026-11-14 · L2/L3 pendentes.
+**Split do ledger:** L1/L2 pagos 2026-11-14 · L3 pendente.
 
 ## R — ações pré-P11 (R1–R8; morrem ao executar)
 
@@ -71,9 +71,9 @@ transferência e o extrato continuam fora deste slice.
 - [x] **L1** Extrair `IdempotencyHash` para o kernel — canonicalização + SHA-256;
       `DepositAttemptService` usa o kernel; unitário de normalização + ITs de depósito.
       — pago 2026-11-14.
-- [ ] **L2** Mover depósito para `features/deposits` — controller/services/DTOs/resultado
-      e testes acompanham o pacote; apenas mudança de pacote, sem fatiar/renomear testes.
-      — pendente.
+- [x] **L2** Mover depósito para `features/deposits` — controller/services/DTOs/resultado
+      e testes acompanham o pacote; apenas mudança de pacote, sem fatiar/renomear testes;
+      suíte integral `./mvnw clean verify` verde. — pago 2026-11-14.
 - [ ] **L3** Fechar separação — `./mvnw clean verify`; ADR-007; história do slice; mapa
       de decisões (regra 13). — pendente.
 

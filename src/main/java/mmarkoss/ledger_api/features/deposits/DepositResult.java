@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.deposits;
 
 import java.math.BigDecimal;
 import java.util.UUID;

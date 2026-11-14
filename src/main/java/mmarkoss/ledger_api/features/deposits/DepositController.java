@@ -1,9 +1,10 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.deposits;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import mmarkoss.ledger_api.features.ledger.dto.DepositReq;
-import mmarkoss.ledger_api.features.ledger.dto.DepositRes;
+import mmarkoss.ledger_api.features.deposits.dto.DepositReq;
+import mmarkoss.ledger_api.features.deposits.dto.DepositRes;
+import mmarkoss.ledger_api.features.ledger.InvalidIdempotencyKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
