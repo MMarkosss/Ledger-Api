@@ -6,9 +6,10 @@
 R10 gate humano · `accounts` encerrado 2026-11-04 · review externa triada 2026-11-08.
 **Pacote pré-P11** (ratificado 2(a) — valor econômico, não bloqueio): **R1–R8** ·
 R1–R8 pagos 2026-11-09/11 · R7.2 idioma: **EN** (veredito 2026-11-09).
-**Suíte:** 9 unit/contexto / 18 integração / 0 e2e — e2e nasce na transferência · alvo
+**Suíte:** 11 unit/contexto / 18 integração / 0 e2e — e2e nasce na transferência · alvo
 70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente.
 **Processo:** regra 7 revista + regras 11/12/13 em 2026-11-14.
+**Split do ledger:** L1 pago 2026-11-14 · L2/L3 pendentes.
 
 ## R — ações pré-P11 (R1–R8; morrem ao executar)
 
@@ -61,6 +62,20 @@ Concluídos:
 
 Término: P9–P13 + rodada de testes do ciclo (escopo definido no P11) verde + debate de
 arquitetura — registrado em `docs/history/slice-deposits.md`.
+
+## Slice `ledger-split` — L1–L3
+
+Foco: separar o kernel compartilhado em `features/ledger` das fatias verticais. A
+transferência e o extrato continuam fora deste slice.
+
+- [x] **L1** Extrair `IdempotencyHash` para o kernel — canonicalização + SHA-256;
+      `DepositAttemptService` usa o kernel; unitário de normalização + ITs de depósito.
+      — pago 2026-11-14.
+- [ ] **L2** Mover depósito para `features/deposits` — controller/services/DTOs/resultado
+      e testes acompanham o pacote; apenas mudança de pacote, sem fatiar/renomear testes.
+      — pendente.
+- [ ] **L3** Fechar separação — `./mvnw clean verify`; ADR-007; história do slice; mapa
+      de decisões (regra 13). — pendente.
 
 ## D — débitos abertos
 

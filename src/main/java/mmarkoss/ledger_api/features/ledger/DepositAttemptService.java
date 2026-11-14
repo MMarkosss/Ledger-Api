@@ -8,10 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,7 +28,8 @@ public class DepositAttemptService {
 
     @Transactional
     public DepositResult attempt(UUID accountId, String idempotencyKey, BigDecimal amount) {
-        String payloadHash = payloadHash(accountId, amount);
+        String payloadHash = IdempotencyHash.sha256(
+                accountId + "|" + IdempotencyHash.canonicalAmount(amount));
 
         Optional<Transaction> existing =
                 transactionRepository.findByIdempotencyKey(idempotencyKey);
@@ -85,17 +82,5 @@ public class DepositAttemptService {
                         "Transação idempotente sem lançamento correspondente"));
 
         return new DepositResult(transaction.getId(), entry.getBalanceAfter(), true);
-    }
-
-    static String payloadHash(UUID accountId, BigDecimal amount) {
-        String normalizedAmount = amount.stripTrailingZeros().toPlainString();
-        String payload = accountId + "|" + normalizedAmount;
-
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(payload.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException ex) {
-            throw new IllegalStateException("SHA-256 indisponível", ex);
-        }
     }
 }
