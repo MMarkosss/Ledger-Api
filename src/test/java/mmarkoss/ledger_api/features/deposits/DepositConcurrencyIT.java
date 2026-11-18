@@ -1,23 +1,11 @@
 package mmarkoss.ledger_api.features.deposits;
 
-import mmarkoss.ledger_api.TestcontainersConfiguration;
-import mmarkoss.ledger_api.features.accounts.dto.AccPostReq;
-import mmarkoss.ledger_api.features.accounts.dto.AccPostRes;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -28,42 +16,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureRestTestClient
-@Import(TestcontainersConfiguration.class)
-class DepositConcurrencyIT {
-
-    private static final String HOLDER = "Maria Silva";
-    private static final String DOC = "12345678901";
-
-    @Autowired
-    RestTestClient rest;
-    @Autowired
-    JdbcTemplate jdbc;
-
-    @BeforeEach
-    void limparBanco() {
-        jdbc.update("delete from ledger_entry");
-        jdbc.update("delete from transaction");
-        jdbc.update("delete from account");
-    }
-
-    private UUID criarConta() {
-        return rest.post().uri("/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new AccPostReq(HOLDER, DOC))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody(AccPostRes.class)
-                .returnResult().getResponseBody().id();
-    }
+class DepositConcurrencyIT extends DepositITSupport {
 
     private int depositarStatus(UUID accountId, String key, String amount) {
-        return rest.post().uri("/accounts/{id}/deposits", accountId)
-                .header("Idempotency-Key", key)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("amount", new BigDecimal(amount)))
-                .exchange()
+        return depositar(accountId, key, amount)
                 .returnResult()
                 .getStatus()
                 .value();

@@ -13,8 +13,9 @@
 | [003](003-traducao-de-constraint-no-service.md) | Tradução de constraint no service | accepted | `AccountService` + `ConstraintNames` + `ApiExceptionHandler` | D13 cura a arquitetura de erros no futuro |
 | [004](004-bigserial-no-ledger-entry.md) | BIGSERIAL no `ledger_entry` | accepted | `LedgerEntry` + `V1`; `V2` remove índice redundante | R10 é gate externo de publicação |
 | [005](005-fk-como-arbitro-do-delete.md) | FK como árbitro do DELETE | accepted | `AccountService.deleteAcc` + FK da V1 | TOCTOU aceito; mensagem não mente |
-| [006](006-idempotencia-hash-e-replay.md) | Idempotência: hash + replay | accepted | `features.deposits.DepositAttemptService` + `IdempotencyHash` + `insertIfAbsent` + `DepositContractIT`/`DepositConcurrencyIT` | P9/P11/P13 fechados |
+| [006](006-idempotencia-hash-e-replay.md) | Idempotência: hash + replay | accepted | `features.deposits.DepositAttemptService` + `IdempotencyHash` + `insertIfAbsent` + `DepositHappyPathIT`/`DepositIdempotencyIT`/`DepositConcurrencyIT` | P9/P11/P13 fechados |
 | [007](007-kernel-do-ledger-separado-das-fatias.md) | Kernel do ledger separado das fatias | accepted | `features/ledger` kernel + `features/deposits`; `IdempotencyHash` no kernel | L1–L3 fechados em 2026-11-17 |
+| [008](008-isolamento-e-fatiamento-de-testes.md) | Isolamento e fatiamento dos testes de integração | accepted | `IntegrationTestSupport` + `AccountITSupport`/`DepositITSupport`; ITs por comportamento; sem `@Order` | TI1–TI4 fechados em 2026-11-17; D18 encerrado |
 
 ## Checklist de fechamento
 

@@ -7,9 +7,12 @@ R10 gate humano · `accounts` encerrado 2026-11-04 · review externa triada 2026
 **Pacote pré-P11** (ratificado 2(a) — valor econômico, não bloqueio): **R1–R8** ·
 R1–R8 pagos 2026-11-09/11 · R7.2 idioma: **EN** (veredito 2026-11-09).
 **Suíte:** 11 unit/contexto / 18 integração / 0 e2e — e2e nasce na transferência · alvo
-70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente.
+70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente; o fatiamento
+por comportamento não altera a contagem.
 **Processo:** regra 7 revista + regras 11/12/13 em 2026-11-14.
 **Split do ledger:** L1/L2 pagos 2026-11-14 · L3 fechado 2026-11-17 · slice encerrado.
+**Testes:** item 4/5 encerrados 2026-11-17 · slice `test-isolation` TI1–TI4 fechado ·
+D18 (`@Order`) descartado — a ordem adversarial passa com limpeza FK.
 
 ## R — ações pré-P11 (R1–R8; morrem ao executar)
 
@@ -80,6 +83,29 @@ transferência e o extrato continuam fora deste slice.
 Término: L1–L3 + suíte integral verde + ADR-007 + revisão de decisões — registrado em
 `docs/history/slice-ledger-split.md`.
 
+## Slice `test-isolation` — TI1–TI4
+
+Foco: isolar o banco entre ITs e fatiar os testes por comportamento, sem trocar a camada
+de prova (`@SpringBootTest` + Postgres real continua necessário para o contrato).
+
+- [x] **TI1** Base de isolamento — `IntegrationTestSupport` centraliza
+      `@SpringBootTest(RANDOM_PORT)`, `@AutoConfigureRestTestClient`, Testcontainers,
+      `RestTestClient` e `JdbcTemplate`; limpeza antes de cada teste em ordem FK
+      (`ledger_entry → transaction → account`); ITs existentes migrados; ordem adversarial
+      verde. — pago 2026-11-17.
+- [x] **TI2** Fatiar depósitos — `DepositHappyPathIT` (1), `DepositIdempotencyIT` (2),
+      `DepositValidationIT` (5); `DepositConcurrencyIT` (2) permanece; helpers em
+      `DepositITSupport`. — pago 2026-11-17.
+- [x] **TI3** Fatiar contas — `AccountCreationIT` (3), `AccountReadIT` (1),
+      `AccountUpdateIT` (3), `AccountErrorIT` (1); helpers em `AccountITSupport`.
+      — pago 2026-11-17.
+- [x] **TI4** Fechar isolamento — `./mvnw clean verify` verde (29 testes: 11/18/0);
+      ordem adversarial depósitos → contas verde (28/28); ADR-008; história; mapa e TODO
+      sincronizados. — pago 2026-11-17.
+
+Término: TI1–TI4 + suíte integral verde + ordem adversarial + ADR-008 — registrado em
+`docs/history/slice-test-isolation.md`.
+
 ## D — débitos abertos
 
 - [x] **D4** Blindagem total da entidade — normalização do `holderName`; **fechado com R5 verde**.
@@ -98,9 +124,10 @@ Término: L1–L3 + suíte integral verde + ADR-007 + revisão de decisões — 
 - [ ] **D15** PATCH sem semântica parcial — gatilho: demanda real.
 - [x] **D16** README das decisões — pago por R9/README (FK como árbitro, BIGSERIAL ×
       UUIDv7, idempotência).
-- [ ] **D18 (discussão)** Ordenação explícita de testes na mesma classe com `@Order`
-      (JUnit 5.8+) — ideia ligada ao item 5 congelado (AccountContractIT/testes), não ao
-      prompt atual. Não implementar agora. Gatilho: **item 5 descongelado**.
+- [x] **D18 (discussão)** Ordenação explícita de testes na mesma classe com `@Order`
+      (JUnit 5.8+) — encerrado sem implementação: a dependência era de estado no banco, e
+      a limpeza FK no `IntegrationTestSupport` torna a ordem irrelevante. `@Order` só
+      esconderia o sintoma. Gatilho original (item 5) cumprido em TI1.
 
 Fora da lista (história): **D1, D2, D3, D10** (pagos no slice) · **D11** (superseded por
 R5/ADR-001; reabre se R5 for revertido) · **D17** (pago por este split em 2026-11-09).
