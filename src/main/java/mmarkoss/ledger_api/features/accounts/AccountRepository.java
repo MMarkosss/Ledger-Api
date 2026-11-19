@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.accounts;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

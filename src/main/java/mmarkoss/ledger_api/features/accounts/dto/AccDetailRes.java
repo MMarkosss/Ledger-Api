@@ -1,6 +1,6 @@
 package mmarkoss.ledger_api.features.accounts.dto;
 
-import mmarkoss.ledger_api.features.ledger.Account;
+import mmarkoss.ledger_api.features.accounts.Account;
 
 import java.math.BigDecimal;
 import java.util.UUID;

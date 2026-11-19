@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DepositHappyPathIT extends DepositITSupport {
 
     @Test
-    @DisplayName("POST deposita e grava transaction + ledger_entry atomicamente")
+    @DisplayName("POST deposita e grava transaction + ledger_entry com snapshot do saldo")
     void deveDepositarEGravarLancamento() {
         UUID accountId = criarConta();
 

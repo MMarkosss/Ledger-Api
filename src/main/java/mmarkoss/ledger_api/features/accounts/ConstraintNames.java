@@ -1,18 +1,17 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.accounts;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 
-public final class ConstraintNames {
-    public static final String ACCOUNT_DOCUMENT_UNIQUE = "account_document_key";
-    public static final String LEDGER_ENTRY_ACCOUNT_FK = "ledger_entry_account_id_fkey";
+final class ConstraintNames {
+    static final String ACCOUNT_DOCUMENT_UNIQUE = "account_document_key";
 
     private ConstraintNames() {
     }
 
-    public static boolean violates(DataIntegrityViolationException ex,
-                                   String sqlState,
-                                   String constraint) {
+    static boolean violates(DataIntegrityViolationException ex,
+                            String sqlState,
+                            String constraint) {
         Throwable cause = ex;
         while (cause != null) {
             if (cause instanceof ConstraintViolationException violation

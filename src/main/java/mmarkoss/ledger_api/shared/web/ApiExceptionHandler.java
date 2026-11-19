@@ -1,13 +1,13 @@
 package mmarkoss.ledger_api.shared.web;
 
 import jakarta.servlet.http.HttpServletRequest;
+import mmarkoss.ledger_api.features.accounts.AccountNotFoundException;
 import mmarkoss.ledger_api.features.accounts.DuplicateDocumentException;
+import mmarkoss.ledger_api.features.accounts.InsufficientBalanceException;
+import mmarkoss.ledger_api.features.accounts.InvalidAmountException;
+import mmarkoss.ledger_api.features.accounts.InvalidHolderNameException;
 import mmarkoss.ledger_api.features.ledger.AccountHasLedgerEntriesException;
-import mmarkoss.ledger_api.features.ledger.AccountNotFoundException;
 import mmarkoss.ledger_api.features.ledger.IdempotencyConflictException;
-import mmarkoss.ledger_api.features.ledger.InsufficientBalanceException;
-import mmarkoss.ledger_api.features.ledger.InvalidAmountException;
-import mmarkoss.ledger_api.features.ledger.InvalidHolderNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

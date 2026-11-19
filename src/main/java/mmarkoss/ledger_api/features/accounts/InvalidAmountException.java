@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.accounts;
 
 public final class InvalidAmountException extends RuntimeException {
     public InvalidAmountException() {

@@ -1,7 +1,6 @@
 package mmarkoss.ledger_api.features.accounts;
 
 import mmarkoss.ledger_api.features.accounts.dto.*;
-import mmarkoss.ledger_api.features.ledger.Account;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;

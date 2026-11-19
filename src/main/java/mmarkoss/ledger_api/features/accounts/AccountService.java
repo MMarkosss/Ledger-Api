@@ -2,11 +2,9 @@ package mmarkoss.ledger_api.features.accounts;
 
 import mmarkoss.ledger_api.features.accounts.dto.AccPostReq;
 import mmarkoss.ledger_api.features.accounts.dto.AccUpdateReq;
-import mmarkoss.ledger_api.features.ledger.Account;
-import mmarkoss.ledger_api.features.ledger.AccountDeletionService;
-import mmarkoss.ledger_api.features.ledger.AccountNotFoundException;
-import mmarkoss.ledger_api.features.ledger.AccountRepository;
-import mmarkoss.ledger_api.features.ledger.ConstraintNames;
+import mmarkoss.ledger_api.features.ledger.AccountHasLedgerEntriesException;
+import mmarkoss.ledger_api.features.ledger.LedgerConstraintNames;
+import mmarkoss.ledger_api.features.ledger.LedgerEntryRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,12 +17,12 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository accRepo;
-    private final AccountDeletionService accountDeletionService;
+    private final LedgerEntryRepository ledgerEntryRepository;
 
     public AccountService(AccountRepository accRepo,
-                          AccountDeletionService accountDeletionService) {
+                          LedgerEntryRepository ledgerEntryRepository) {
         this.accRepo = accRepo;
-        this.accountDeletionService = accountDeletionService;
+        this.ledgerEntryRepository = ledgerEntryRepository;
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +65,21 @@ public class AccountService {
 
     @Transactional
     public void deleteAcc(UUID id) {
-        accountDeletionService.delete(id);
+        Account acc = findByIdOrThrow(id);
+
+        if (ledgerEntryRepository.existsByAccountId(id)) {
+            throw new AccountHasLedgerEntriesException(id);
+        }
+
+        try {
+            accRepo.delete(acc);
+            accRepo.flush();
+        } catch (DataIntegrityViolationException ex) {
+            if (ConstraintNames.violates(
+                    ex, "23503", LedgerConstraintNames.LEDGER_ENTRY_ACCOUNT_FK)) {
+                throw new AccountHasLedgerEntriesException(id);
+            }
+            throw ex;
+        }
     }
 }

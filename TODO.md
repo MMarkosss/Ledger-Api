@@ -4,13 +4,13 @@
 
 **Estado:** passo 5 fechado 2026-11-11 · slice `deposits` — P9–P13 fechados · R9 pago ·
 R10 gate humano · `accounts` encerrado 2026-11-04 · review externa triada 2026-11-08 ·
-slice `polish` Q1–Q3 fechado 2026-11-18 · slice `ledger-context` LC1–LC4 fechado
-2026-11-19.
+slice `polish` Q1–Q3 fechado 2026-11-18 · slice `ledger-context` LC1–LC4 revertido
+2026-11-19 · slice `explicit-ledger-dependency` ED1–ED3 fechado 2026-11-19.
 **Pacote pré-P11** (ratificado 2(a) — valor econômico, não bloqueio): **R1–R8** ·
 R1–R8 pagos 2026-11-09/11 · R7.2 idioma: **EN** (veredito 2026-11-09).
 **Suíte:** 14 unit/contexto / 21 integração / 0 e2e — e2e nasce na transferência · alvo
-70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente; LC2 adicionou
-a prova de `balance_after == account.balance` e LC3 adicionou 2 ITs de deleção.
+70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente; ED manteve a
+prova de `balance_after == account.balance` no depósito e os 2 ITs de deleção.
 **Processo:** regra 7 revista + regras 11/12/13 em 2026-11-14.
 **Split do ledger:** L1/L2 pagos 2026-11-14 · L3 fechado 2026-11-17 · slice encerrado.
 **Testes:** item 4/5 encerrados 2026-11-17 · slice `test-isolation` TI1–TI4 fechado ·
@@ -18,8 +18,10 @@ D18 (`@Order`) descartado — a ordem adversarial passou com limpeza centralizad
 para `TRUNCATE` sem `CASCADE`.
 **Polimento:** `LedgerEntry` append-only no Java/ORM e no banco (ADR-009); DTOs de conta
 unificados; limpeza dos ITs agora é `TRUNCATE` sem `CASCADE` (ADR-008 atualizado).
-**Contexto:** `Account` e ledger no mesmo bounded context (ADR-010); `LedgerPostingService`
-é a única porta de mutação; ADR-007 superseded; D6 pago.
+**Contexto:** `Account` voltou para `features/accounts`; o ledger é kernel separado
+(ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; o depósito
+orquestra conta + lançamento; `balanceAfter` é snapshot do use case, não invariante.
+D6 pago com `LedgerEntryRepository.existsByAccountId`.
 **Próximo foco:** transfers — fatiar antes de codar; e2e nasce na transferência e fecha
 com o extrato.
 
@@ -135,7 +137,11 @@ conta, sem mudar o contrato HTTP.
 Término: Q1–Q3 + suíte integral verde + ADR-009 + revisão de decisões — registrado em
 `docs/history/slice-polish.md`.
 
-## Slice `ledger-context` — LC1–LC4
+## Slice `ledger-context` — LC1–LC4 (histórico; revertido)
+
+> Revertido por ADR-011 em 2026-11-19. `Account` voltou para `features/accounts`;
+> `LedgerPostingService` e `AccountDeletionService` foram removidos; a opção A
+> (dependência explícita) foi adotada. Os itens abaixo ficam como história.
 
 Foco: reconhecer que conta e ledger são o mesmo bounded context, tornar a dependência
 explícita e fechar a escrita de saldo/lançamento em um único posting service. Transfers
@@ -158,12 +164,34 @@ ficam congelados até o fim deste slice.
 Término: LC1–LC4 + `./mvnw clean verify` verde + ADR-010 + revisão de decisões —
 registrado em `docs/history/slice-ledger-context.md`.
 
+## Slice `explicit-ledger-dependency` — ED1–ED3
+
+Foco: reverter a conta para `features/accounts` sem perder Q1–Q3, e tornar explícita a
+dependência `accounts -> ledger` na deleção. ADR-011 substitui o ADR-010.
+
+- [x] **ED1** Mover `Account`, `AccountRepository` e exceções de domínio de conta de volta
+      para `features/accounts`; remover `LedgerPostingService` e `AccountDeletionService`;
+      manter `Account.open`, Q1/Q2 append-only e Q3 DTO único.
+      — pago 2026-11-19.
+- [x] **ED2** Dependência explícita — `AccountService` usa
+      `LedgerEntryRepository.existsByAccountId`, `LedgerConstraintNames` e
+      `AccountHasLedgerEntriesException`; `DepositAttemptService` orquestra conta + ledger;
+      `AccountTest` volta para `features/accounts`; `AccountDeletionIT` mantido.
+      — pago 2026-11-19.
+- [x] **ED3** Documentação e rodada — ADR-011; ADR-010 `superseded`; ADR-007/009/001/003/005/006
+      sincronizados; README/TODO/história; `./mvnw clean verify` verde 35 (14/21/0).
+      — pago 2026-11-19.
+
+Término: ED1–ED3 + suíte integral verde + ADR-011 + revisão de decisões — registrado em
+`docs/history/slice-explicit-ledger-dependency.md`.
+
 ## D — débitos abertos
 
 - [x] **D4** Blindagem total da entidade — normalização do `holderName`; **fechado com R5 verde**.
 - [ ] **D5** Soft delete de conta — gatilho: extrato.
 - [x] **D6** `existsLedgerEntryFor` → `LedgerEntryRepository.existsByAccountId` — pago por
-      LC3; gatilho original (extrato/transfer) antecipado pela revisão de contexto.
+      LC3 e preservado no ED2; `AccountService` depende explicitamente do repositório do
+      ledger. Gatilho original (extrato/transfer) antecipado pela revisão de contexto.
 - [ ] **D7** `updated_at` autoritativo no banco (trigger) — gatilho: auditoria.
 - [ ] **D8** BDD da jornada — gatilho: transfer.
 - [ ] **D9** Cobertura de timestamps — gatilho: extrato.

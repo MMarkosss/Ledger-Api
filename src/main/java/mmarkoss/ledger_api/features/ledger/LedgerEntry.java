@@ -20,10 +20,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Lançamento append-only do ledger. A criação passa pelas factories package-private
- * {@link #credit} e {@link #debit}, usadas pelo {@link LedgerPostingService}; não há builder
- * público nem setters. O posting service pareia a criação do lançamento com
- * {@code Account.credit}/{@code Account.debit}.
+ * Lançamento append-only do ledger. A criação passa pelas factories validadas
+ * {@link #credit} e {@link #debit}; não há builder nem setters. O use case é responsável
+ * por fornecer o {@code balanceAfter} e por parear a criação com {@code Account.credit}/
+ * {@code Account.debit}; essa relação não é uma invariante do aggregate.
  */
 @Entity
 @Table(name = "ledger_entry")
@@ -74,34 +74,34 @@ public class LedgerEntry {
         this.counterpartyId = counterpartyId;
     }
 
-    static LedgerEntry credit(UUID transactionId,
-                              UUID accountId,
-                              BigDecimal amount,
-                              BigDecimal balanceAfter) {
+    public static LedgerEntry credit(UUID transactionId,
+                                     UUID accountId,
+                                     BigDecimal amount,
+                                     BigDecimal balanceAfter) {
         return credit(transactionId, accountId, amount, balanceAfter, null);
     }
 
-    static LedgerEntry credit(UUID transactionId,
-                              UUID accountId,
-                              BigDecimal amount,
-                              BigDecimal balanceAfter,
-                              UUID counterpartyId) {
+    public static LedgerEntry credit(UUID transactionId,
+                                     UUID accountId,
+                                     BigDecimal amount,
+                                     BigDecimal balanceAfter,
+                                     UUID counterpartyId) {
         return create(EntryDirection.CREDIT, transactionId, accountId, amount, balanceAfter,
                 counterpartyId);
     }
 
-    static LedgerEntry debit(UUID transactionId,
-                             UUID accountId,
-                             BigDecimal amount,
-                             BigDecimal balanceAfter) {
+    public static LedgerEntry debit(UUID transactionId,
+                                    UUID accountId,
+                                    BigDecimal amount,
+                                    BigDecimal balanceAfter) {
         return debit(transactionId, accountId, amount, balanceAfter, null);
     }
 
-    static LedgerEntry debit(UUID transactionId,
-                             UUID accountId,
-                             BigDecimal amount,
-                             BigDecimal balanceAfter,
-                             UUID counterpartyId) {
+    public static LedgerEntry debit(UUID transactionId,
+                                    UUID accountId,
+                                    BigDecimal amount,
+                                    BigDecimal balanceAfter,
+                                    UUID counterpartyId) {
         return create(EntryDirection.DEBIT, transactionId, accountId, amount, balanceAfter,
                 counterpartyId);
     }

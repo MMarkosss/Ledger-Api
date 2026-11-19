@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.ledger;
+package mmarkoss.ledger_api.features.accounts;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,9 +16,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Conta é o aggregate root do saldo. A mutação de saldo é package-private: apenas o
- * {@link LedgerPostingService}, no mesmo contexto, pode chamar {@link #credit} e
- * {@link #debit}. Criação e rename continuam expostos para a fatia de contas.
+ * Conta é o aggregate root do saldo. {@link #credit} e {@link #debit} são públicos porque
+ * o use case de depósito (e futuras operações) orquestra conta e ledger em pacotes
+ * diferentes. O pareamento com {@code ledger_entry} é responsabilidade do use case, não
+ * uma invariante deste aggregate.
  */
 @Entity
 @Getter
@@ -59,12 +60,12 @@ public class Account {
         return new Account(holderName, document);
     }
 
-    void credit(BigDecimal amount) {
+    public void credit(BigDecimal amount) {
         validateAmount(amount);
         this.balance = this.balance.add(amount);
     }
 
-    void debit(BigDecimal amount) {
+    public void debit(BigDecimal amount) {
         validateAmount(amount);
         if (this.balance.compareTo(amount) < 0) {
             throw new InsufficientBalanceException();
