@@ -1,13 +1,11 @@
 package mmarkoss.ledger_api.features.deposits;
 
-import mmarkoss.ledger_api.features.accounts.Account;
-import mmarkoss.ledger_api.features.accounts.AccountNotFoundException;
-import mmarkoss.ledger_api.features.accounts.AccountRepository;
-import mmarkoss.ledger_api.features.ledger.EntryDirection;
+import mmarkoss.ledger_api.features.ledger.Account;
 import mmarkoss.ledger_api.features.ledger.IdempotencyConflictException;
 import mmarkoss.ledger_api.features.ledger.IdempotencyHash;
 import mmarkoss.ledger_api.features.ledger.LedgerEntry;
 import mmarkoss.ledger_api.features.ledger.LedgerEntryRepository;
+import mmarkoss.ledger_api.features.ledger.LedgerPostingService;
 import mmarkoss.ledger_api.features.ledger.Transaction;
 import mmarkoss.ledger_api.features.ledger.TransactionRepository;
 import mmarkoss.ledger_api.features.ledger.TransactionStatus;
@@ -23,14 +21,14 @@ import java.util.UUID;
 @Service
 public class DepositAttemptService {
 
-    private final AccountRepository accountRepository;
+    private final LedgerPostingService postingService;
     private final TransactionRepository transactionRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
 
-    public DepositAttemptService(AccountRepository accountRepository,
+    public DepositAttemptService(LedgerPostingService postingService,
                                  TransactionRepository transactionRepository,
                                  LedgerEntryRepository ledgerEntryRepository) {
-        this.accountRepository = accountRepository;
+        this.postingService = postingService;
         this.transactionRepository = transactionRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
     }
@@ -46,8 +44,7 @@ public class DepositAttemptService {
             return replay(existing.get(), accountId, payloadHash);
         }
 
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(accountId));
+        Account account = postingService.requireAccount(accountId);
         Account.validateAmount(amount);
 
         UUID transactionId = UuidVersion7Strategy.INSTANCE.generateUuid(null);
@@ -66,16 +63,7 @@ public class DepositAttemptService {
             return replay(winner, accountId, payloadHash);
         }
 
-        account.credit(amount);
-
-        LedgerEntry entry = LedgerEntry.builder()
-                .transactionId(transactionId)
-                .accountId(accountId)
-                .direction(EntryDirection.CREDIT)
-                .amount(amount)
-                .balanceAfter(account.getBalance())
-                .build();
-        ledgerEntryRepository.save(entry);
+        LedgerEntry entry = postingService.credit(transactionId, account, amount);
 
         return new DepositResult(transactionId, entry.getBalanceAfter(), false);
     }

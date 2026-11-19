@@ -3,6 +3,7 @@ package mmarkoss.ledger_api.features.deposits;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,5 +31,11 @@ class DepositHappyPathIT extends DepositITSupport {
                 .isEqualTo(1L);
         assertThat(jdbc.queryForObject("select count(*) from ledger_entry", Long.class))
                 .isEqualTo(1L);
+        assertThat(jdbc.queryForObject(
+                "select balance_after from ledger_entry", BigDecimal.class))
+                .isEqualByComparingTo("100.50");
+        assertThat(jdbc.queryForObject(
+                "select balance from account where id = ?", BigDecimal.class, accountId))
+                .isEqualByComparingTo("100.50");
     }
 }

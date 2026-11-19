@@ -1,6 +1,7 @@
 package mmarkoss.ledger_api.features.accounts;
 
 import mmarkoss.ledger_api.features.accounts.dto.*;
+import mmarkoss.ledger_api.features.ledger.Account;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,10 +36,10 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<AccPostRes> postAcc (@RequestBody @Valid AccPostReq dto) {
+    public ResponseEntity<AccDetailRes> postAcc (@RequestBody @Valid AccPostReq dto) {
         Account acc = accServ.createAcc(dto);
 
-        return ResponseEntity.status(201).body(new AccPostRes(acc));
+        return ResponseEntity.status(201).body(new AccDetailRes(acc));
     }
 
     @PutMapping("/{id}")

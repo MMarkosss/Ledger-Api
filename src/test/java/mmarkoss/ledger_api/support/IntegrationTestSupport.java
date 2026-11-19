@@ -11,7 +11,11 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 /**
  * Base dos testes de integração: sobe o contexto completo uma vez e limpa o banco
- * antes de cada teste na ordem exigida pelas FKs.
+ * antes de cada teste.
+ *
+ * O ledger é append-only no banco (ADR-009), então DELETE em {@code ledger_entry} é
+ * rejeitado pela trigger. TRUNCATE não dispara row triggers; a lista explícita das três
+ * tabelas evita CASCADE e mantém a dependência de FK visível.
  *
  * Cliente HTTP real comita cada request; por isso a limpeza é explícita e não depende
  * de rollback transacional.
@@ -29,8 +33,6 @@ public abstract class IntegrationTestSupport {
 
     @BeforeEach
     protected final void cleanDatabase() {
-        jdbc.update("delete from ledger_entry");
-        jdbc.update("delete from transaction");
-        jdbc.update("delete from account");
+        jdbc.update("truncate table ledger_entry, transaction, account restart identity");
     }
 }

@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.accounts;
+package mmarkoss.ledger_api.features.ledger;
 
 import java.util.UUID;
 

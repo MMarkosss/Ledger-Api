@@ -3,16 +3,25 @@
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
 **Estado:** passo 5 fechado 2026-11-11 · slice `deposits` — P9–P13 fechados · R9 pago ·
-R10 gate humano · `accounts` encerrado 2026-11-04 · review externa triada 2026-11-08.
+R10 gate humano · `accounts` encerrado 2026-11-04 · review externa triada 2026-11-08 ·
+slice `polish` Q1–Q3 fechado 2026-11-18 · slice `ledger-context` LC1–LC4 fechado
+2026-11-19.
 **Pacote pré-P11** (ratificado 2(a) — valor econômico, não bloqueio): **R1–R8** ·
 R1–R8 pagos 2026-11-09/11 · R7.2 idioma: **EN** (veredito 2026-11-09).
-**Suíte:** 11 unit/contexto / 18 integração / 0 e2e — e2e nasce na transferência · alvo
-70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente; o fatiamento
-por comportamento não altera a contagem.
+**Suíte:** 14 unit/contexto / 21 integração / 0 e2e — e2e nasce na transferência · alvo
+70/20/10 (`PROCESS.md`). Desvio atual registrado, não declarado convergente; LC2 adicionou
+a prova de `balance_after == account.balance` e LC3 adicionou 2 ITs de deleção.
 **Processo:** regra 7 revista + regras 11/12/13 em 2026-11-14.
 **Split do ledger:** L1/L2 pagos 2026-11-14 · L3 fechado 2026-11-17 · slice encerrado.
 **Testes:** item 4/5 encerrados 2026-11-17 · slice `test-isolation` TI1–TI4 fechado ·
-D18 (`@Order`) descartado — a ordem adversarial passa com limpeza FK.
+D18 (`@Order`) descartado — a ordem adversarial passou com limpeza centralizada; Q2 trocou
+para `TRUNCATE` sem `CASCADE`.
+**Polimento:** `LedgerEntry` append-only no Java/ORM e no banco (ADR-009); DTOs de conta
+unificados; limpeza dos ITs agora é `TRUNCATE` sem `CASCADE` (ADR-008 atualizado).
+**Contexto:** `Account` e ledger no mesmo bounded context (ADR-010); `LedgerPostingService`
+é a única porta de mutação; ADR-007 superseded; D6 pago.
+**Próximo foco:** transfers — fatiar antes de codar; e2e nasce na transferência e fecha
+com o extrato.
 
 ## R — ações pré-P11 (R1–R8; morrem ao executar)
 
@@ -92,7 +101,7 @@ de prova (`@SpringBootTest` + Postgres real continua necessário para o contrato
       `@SpringBootTest(RANDOM_PORT)`, `@AutoConfigureRestTestClient`, Testcontainers,
       `RestTestClient` e `JdbcTemplate`; limpeza antes de cada teste em ordem FK
       (`ledger_entry → transaction → account`); ITs existentes migrados; ordem adversarial
-      verde. — pago 2026-11-17.
+      verde. A limpeza foi trocada por `TRUNCATE` no Q2. — pago 2026-11-17.
 - [x] **TI2** Fatiar depósitos — `DepositHappyPathIT` (1), `DepositIdempotencyIT` (2),
       `DepositValidationIT` (5); `DepositConcurrencyIT` (2) permanece; helpers em
       `DepositITSupport`. — pago 2026-11-17.
@@ -106,12 +115,55 @@ de prova (`@SpringBootTest` + Postgres real continua necessário para o contrato
 Término: TI1–TI4 + suíte integral verde + ordem adversarial + ADR-008 — registrado em
 `docs/history/slice-test-isolation.md`.
 
+## Slice `polish` — Q1–Q3
+
+Foco: fechar a criação arbitrária de lançamento no ledger e remover o DTO duplicado de
+conta, sem mudar o contrato HTTP.
+
+- [x] **Q1** Fechar a construção do `LedgerEntry` — remover `@Builder` e construtor público;
+      factories `credit`/`debit` com validação; `@Immutable`; repositório com apenas
+      `save`/leitura; `DepositAttemptService` usa a factory; `LedgerEntryTest`.
+      — pago 2026-11-18.
+- [x] **Q2** Append-only no banco — `V3__ledger_entry_append_only.sql` com trigger
+      `BEFORE UPDATE OR DELETE`; `IntegrationTestSupport` limpa com
+      `truncate table ledger_entry, transaction, account restart identity` (sem `CASCADE`);
+      `LedgerEntryAppendOnlyIT`; ADR-009 e ADR-008 atualizado. — pago 2026-11-18.
+- [x] **Q3** Unificar DTOs de conta — `AccPostRes` removido; `POST` e `GET` usam
+      `AccDetailRes`; supports de IT atualizados; suíte integral 33 (14/19/0).
+      — pago 2026-11-18.
+
+Término: Q1–Q3 + suíte integral verde + ADR-009 + revisão de decisões — registrado em
+`docs/history/slice-polish.md`.
+
+## Slice `ledger-context` — LC1–LC4
+
+Foco: reconhecer que conta e ledger são o mesmo bounded context, tornar a dependência
+explícita e fechar a escrita de saldo/lançamento em um único posting service. Transfers
+ficam congelados até o fim deste slice.
+
+- [x] **LC1** Decisão e mapa — ADR-010; ADR-007 marcado `superseded`; ADR-009 emendado;
+      mapa de dependências e `docs/decisions/README.md` sincronizados. Sem código.
+      — pago 2026-11-19.
+- [x] **LC2** Posting service e ownership — `Account`/repositório/exceções movidos para
+      `features/ledger`; `Account.credit/debit` e factories de `LedgerEntry` package-private;
+      `LedgerPostingService` criado; depósito usa o posting service; `DepositHappyPathIT`
+      prova `balance_after == account.balance`. — pago 2026-11-19.
+- [x] **LC3** Deleção no ledger — `AccountDeletionService` + `existsByAccountId`; D6 pago;
+      `AccountDeletionIT` cobre `204` sem lançamento e `409` com lançamento. — pago
+      2026-11-19.
+- [x] **LC4** Limpeza de fronteira — `InvalidIdempotencyKeyException` movido para
+      `shared.web`; canonicalização por operação documentada; suíte integral 35 (14/21/0);
+      README/TODO/ADR/história sincronizados. — pago 2026-11-19.
+
+Término: LC1–LC4 + `./mvnw clean verify` verde + ADR-010 + revisão de decisões —
+registrado em `docs/history/slice-ledger-context.md`.
+
 ## D — débitos abertos
 
 - [x] **D4** Blindagem total da entidade — normalização do `holderName`; **fechado com R5 verde**.
 - [ ] **D5** Soft delete de conta — gatilho: extrato.
-- [ ] **D6** `existsLedgerEntryFor` → `LedgerEntryRepository.existsByAccountId` — gatilho:
-      extrato/transfer.
+- [x] **D6** `existsLedgerEntryFor` → `LedgerEntryRepository.existsByAccountId` — pago por
+      LC3; gatilho original (extrato/transfer) antecipado pela revisão de contexto.
 - [ ] **D7** `updated_at` autoritativo no banco (trigger) — gatilho: auditoria.
 - [ ] **D8** BDD da jornada — gatilho: transfer.
 - [ ] **D9** Cobertura de timestamps — gatilho: extrato.

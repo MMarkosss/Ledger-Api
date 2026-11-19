@@ -1,7 +1,7 @@
 package mmarkoss.ledger_api.features.deposits;
 
+import mmarkoss.ledger_api.features.accounts.dto.AccDetailRes;
 import mmarkoss.ledger_api.features.accounts.dto.AccPostReq;
-import mmarkoss.ledger_api.features.accounts.dto.AccPostRes;
 import mmarkoss.ledger_api.support.IntegrationTestSupport;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -25,7 +25,7 @@ abstract class DepositITSupport extends IntegrationTestSupport {
                 .body(new AccPostReq(HOLDER, DOC))
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(AccPostRes.class)
+                .expectBody(AccDetailRes.class)
                 .returnResult().getResponseBody().id();
     }
 

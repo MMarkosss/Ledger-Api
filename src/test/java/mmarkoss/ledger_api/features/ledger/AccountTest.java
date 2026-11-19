@@ -1,4 +1,4 @@
-package mmarkoss.ledger_api.features.accounts;
+package mmarkoss.ledger_api.features.ledger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,10 +15,7 @@ class AccountTest {
 
     @BeforeEach
     void setUp() {
-        this.acc = Account.builder()
-                .holderName("Maria Silva")
-                .document("12345678901")
-                .build();
+        this.acc = Account.open("Maria Silva", "12345678901");
     }
 
     @Test

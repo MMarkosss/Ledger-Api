@@ -98,6 +98,13 @@ The full records live in [`docs/decisions`](docs/decisions):
 
 - **Account invariants** — `credit`, `debit` and `rename` live on the entity; DTO
   validation is the format gate and the database CHECK is the floor.
+- **Account and ledger in one context** — `Account` and `LedgerEntry` remain separate
+  aggregates, but `LedgerPostingService` is the only writer of balance and entry.
+  `credit`/`debit` and the entry factories are package-private; `AccountService` stays in
+  `features/accounts` as an adapter/application service.
+- **Append-only ledger** — `LedgerEntry` has no public builder; creation uses package-private
+  `credit` or `debit` factories through the posting service, and a database trigger rejects
+  `UPDATE`/`DELETE`. Integration tests clear the ledger with `TRUNCATE` (no `CASCADE`).
 - **IDs** — `account` and `transaction` use app-side UUIDv7; `ledger_entry` uses
   `BIGSERIAL` because strict statement ordering is worth more than batching there.
   The PostgreSQL `DEFAULT uuidv7()` remains a floor for non-app writers.
@@ -105,7 +112,8 @@ The full records live in [`docs/decisions`](docs/decisions):
   (`23505` / `23503` plus constraint name); the generic advice logs the stack and returns
   a static response.
 - **DELETE arbitration** — the foreign key is the real arbiter for an account with ledger
-  entries; the pre-check only improves the common message.
+  entries; `AccountDeletionService` owns the policy and the pre-check only improves the
+  common message.
 - **Idempotency** — the unique key is global; concurrent duplicates are resolved with
   `INSERT ... ON CONFLICT (idempotency_key) DO NOTHING` followed by replay.
 - **Concurrency** — the account `@Version` is the optimistic lock; deposit attempts retry
