@@ -3,16 +3,16 @@
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
 **Estado:** slice `transfers` em andamento — TR0–TR1 fechados em 2026-11-21; TR2–TR4
-fechados em 2026-11-22; TR5 aberto.
+fechados em 2026-11-22; TR5 aberto. E2e/BDD adiados para o extrato (ADR-012, D8/D20).
 **Suíte:** 14 unit/contexto / 38 integração / 0 e2e — alvo 70/20/10 (`PROCESS.md`).
-O desvio é conhecido; o e2e nasce no TR5 deste slice.
+O desvio é conhecido; a primeira jornada e2e/BDD nasce no extrato.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; o depósito
 orquestra conta + lançamento; `balanceAfter` é snapshot do use case, não invariante.
 `LedgerEntry` continua append-only (ADR-009); DTOs de conta unificados; ITs limpam com
 `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` fica em `shared.web`.
-**Próximo foco:** TR5 — fechamento do slice, D19 e `TransferJourneyE2E`. O e2e nasce no
-TR5 e fecha com o extrato.
+**Próximo foco:** TR5 — fechamento do slice, D19 e documentação. O e2e/BDD nasce no
+extrato (ADR-012, D8/D20).
 
 ## G — gates de publicação
 
@@ -23,8 +23,8 @@ TR5 e fecha com o extrato.
 
 - [ ] **D5** Soft delete de conta — gatilho: extrato.
 - [ ] **D7** `updated_at` autoritativo no banco (trigger) — gatilho: auditoria.
-- [ ] **D8** BDD da jornada — gatilho: extrato (o e2e da transferência não conta como
-      BDD).
+- [ ] **D8** BDD da jornada — gatilho: extrato. O e2e da transferência foi adiado para o
+      extrato (D20) e não conta como BDD.
 - [ ] **D9** Cobertura de timestamps — gatilho: extrato.
 - [ ] **D13** Arquitetura de erros curada — `DomainException`, `NoResourceFoundException` →
       404, `traceId`, `include-message/stacktrace=never`, auditoria de mensagens. Gatilho:
@@ -34,6 +34,9 @@ TR5 e fecha com o extrato.
       `Account.credit/debit` + `LedgerEntry.credit/debit` com `balanceAfter` será repetida
       na transferência; provar direção, valor e snapshot sem HTTP/DB. Gatilho: TR5 da
       transferência.
+- [ ] **D20** E2E da jornada de transferência — adiado para o extrato: um smoke agora
+      duplicaria `TransferHappyPathIT`/ITs de transferência e, sem extrato, não provaria
+      a auditabilidade nem a ordem do ledger. Gatilho: extrato, junto com D8 (ADR-012).
 
 Fechados ou absorvidos: **D4, D6, D12, D14, D16, D18**; **D11** superseded por
 R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
@@ -59,12 +62,11 @@ determinístico, sem retry interno; B1/B2 rejeitadas. Sem migração: `V1` já t
 - [x] **TR4** Concorrência — chaves diferentes na mesma origem e direções opostas sem
       deadlock/`500`; lock timeout mapeado para `409` retryable. Teste:
       `TransferConcurrencyIT`. — pago 2026-11-22.
-- [ ] **TR5** Fechamento — D19 (unitário do pareamento), `TransferJourneyE2E` e inclusão
-      de `**/*E2E.java` no Failsafe; README/TODO/história e revisão de decisões.
-      Testes: `TransferPairingTest` + `TransferJourneyE2E`.
+- [ ] **TR5** Fechamento — D19 (unitário do pareamento), README/TODO/história e revisão
+      de decisões. Teste: `TransferPairingTest`. O e2e/BDD fica no extrato (D8/D20).
 
-Término: TR1–TR5 + suíte integral verde + e2e + revisão de decisões — registrado em
-`docs/history/slice-transfers.md`.
+Término: TR1–TR5 + suíte integral verde + revisão de decisões — registrado em
+`docs/history/slice-transfers.md`; e2e/BDD no extrato (ADR-012, D8/D20).
 
 ## Slices encerrados
 

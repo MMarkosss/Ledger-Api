@@ -4,8 +4,8 @@
 **Data:** 2026-11-21
 **Origem:** slice `transfers` (TR0) + decisão A da discussão de concorrência
 
-> Decisão tomada antes do código. A implementação segue em TR1–TR5; o depósito
-> continua no modelo otimista do ADR-006/011.
+> Decisão tomada antes do código. A implementação segue em TR1–TR5; o e2e da jornada foi
+> adiado para o extrato. O depósito continua no modelo otimista do ADR-006/011.
 
 ## Contexto
 
@@ -60,6 +60,29 @@ storm/livelock, ou terminar em `500` depois do orçamento de tentativas.
 7. **Sem schema novo.** `TRANSFER`, `counterparty_id` e o índice por `transaction_id` já
    existem. A mudança é de aplicação e de contrato.
 
+## E2E da transferência: adiado para o extrato
+
+**Decisão (2026-11-22):** este slice não terá `TransferJourneyE2E`. A primeira jornada
+e2e/BDD nasce no slice de extrato, junto com D8 e D20.
+
+**Justificativas:**
+
+- O `TransferHappyPathIT` já percorre criação de contas, depósito, transferência, leitura
+  dos saldos e confere a transação e os dois lançamentos no Postgres. Um e2e só-HTTP agora
+  seria um subconjunto desse IT.
+- Sem endpoint de extrato, a jornada não prova a leitura auditável, a ordem dos
+  lançamentos, `counterparty_id`/`balance_after` na visão do cliente nem a regra dura
+  "extrato auditável". Ela provaria apenas que o saldo se move, o que os ITs já cobrem.
+- Um smoke amplo e raso adiciona ruído de cobertura e não substitui a jornada de negócio.
+  A criticidade da transferência já está coberta no nível de integração.
+- O lugar correto do e2e/BDD é o extrato, onde create → deposit → transfer → statement
+  forma uma jornada completa. Antecipar agora duplicaria o setup e obrigaria a reescrever
+  o cenário quando o extrato chegar.
+- Cucumber/BDD entra no extrato. O e2e da transferência não conta como BDD e não paga D8.
+
+**Consequência:** TR5 fecha com D19 e documentação; D8 e D20 ficam abertos com gatilho no
+extrato.
+
 ## Entradas adversariais
 
 ### A — lock pessimista determinístico (adotada)
@@ -112,13 +135,13 @@ complexidade sem resolver o problema central.
   `LEDGER_TRANSFER_LOCK_TIMEOUT`); o `409` de concorrência usa
   `code=CONCURRENCY_CONFLICT` e `retryable=true`, distinto do
   `IDEMPOTENCY_CONFLICT`.
-- TR1–TR4 implementados; TR5 fecha com o e2e, o D19 (teste unitário do pareamento) e a
-  documentação.
-- A suíte sai de 35 testes e ganha a primeira jornada e2e; a distribuição será medida no
-  fechamento, sem declarar convergência.
+- TR1–TR4 implementados; TR5 fecha com D19 (teste unitário do pareamento) e a
+  documentação. O e2e da jornada foi adiado para o extrato (D20).
+- A suíte cresce sem e2e neste slice; a primeira jornada e2e/BDD nasce no extrato. A
+  distribuição será medida no fechamento, sem declarar convergência.
 - Não há migração de banco nem mudança nas tabelas.
-- D8 não é pago por esta ADR: o e2e da transferência não é BDD; o gatilho de D8 foi
-  re-triggerado para o extrato.
+- D8 permanece aberto; D20 registra o e2e adiado para o extrato. O e2e da transferência
+  não é BDD e não paga D8.
 
 ## Gatilho de reabertura
 

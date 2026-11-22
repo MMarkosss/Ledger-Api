@@ -10,13 +10,16 @@ entries, idempotent writes, and explicit concurrency behavior.
 
 - Account creation, lookup, listing, rename and deletion.
 - Deposits through `POST /accounts/{id}/deposits`.
+- Transfers through `POST /transfers`, with deterministic pessimistic locking and
+  retryable conflict handling.
 - Atomic `transaction` + `ledger_entry` writes.
 - Idempotency via the `Idempotency-Key` header.
 - Optimistic locking on the account balance.
 - Domain errors mapped to explicit HTTP statuses.
 - Flyway migrations and Testcontainers-backed integration tests.
 
-Transfers and statements are the next vertical slice; the e2e journey starts there.
+Transfers are implemented at the HTTP integration level. Statements and the end-to-end
+journey arrive with the next slice.
 
 ## Stack
 
@@ -132,4 +135,4 @@ Process and slice history are documented in [`PROCESS.md`](PROCESS.md),
 
 Integration tests use Testcontainers, so Docker must be available. The suite is split
 between domain/unit tests and HTTP contract tests; the target pyramid is roughly
-70% unit / 20% integration / 10% e2e, with e2e arriving with transfers and statements.
+70% unit / 20% integration / 10% e2e, with the e2e journey arriving with statements.
