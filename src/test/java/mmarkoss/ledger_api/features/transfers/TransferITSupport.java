@@ -7,8 +7,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Helpers comuns dos ITs de transferência. O comportamento de cada classe fica no teste;
@@ -63,5 +73,44 @@ abstract class TransferITSupport extends IntegrationTestSupport {
                         "destinationAccountId", destinationAccountId,
                         "amount", new BigDecimal(amount)))
                 .exchange();
+    }
+
+    protected int transferirStatus(UUID sourceAccountId,
+                                   UUID destinationAccountId,
+                                   String key,
+                                   String amount) {
+        return transferir(sourceAccountId, destinationAccountId, key, amount)
+                .returnResult()
+                .getStatus()
+                .value();
+    }
+
+    @SafeVarargs
+    protected final List<Integer> executarJuntos(Callable<Integer>... tasks) throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(tasks.length);
+        CountDownLatch ready = new CountDownLatch(tasks.length);
+        CountDownLatch go = new CountDownLatch(1);
+        List<Future<Integer>> futures = new ArrayList<>();
+
+        try {
+            for (Callable<Integer> task : tasks) {
+                futures.add(pool.submit(() -> {
+                    ready.countDown();
+                    go.await();
+                    return task.call();
+                }));
+            }
+
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            go.countDown();
+
+            List<Integer> statuses = new ArrayList<>();
+            for (Future<Integer> future : futures) {
+                statuses.add(future.get(15, TimeUnit.SECONDS));
+            }
+            return statuses;
+        } finally {
+            pool.shutdownNow();
+        }
     }
 }

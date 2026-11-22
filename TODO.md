@@ -2,16 +2,16 @@
 
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
-**Estado:** slice `transfers` em andamento — TR0–TR1 fechados em 2026-11-21; TR2 fechado
-em 2026-11-22; TR3–TR5 abertos.
-**Suíte:** 14 unit/contexto / 31 integração / 0 e2e — alvo 70/20/10 (`PROCESS.md`).
+**Estado:** slice `transfers` em andamento — TR0–TR1 fechados em 2026-11-21; TR2–TR3
+fechados em 2026-11-22; TR4–TR5 abertos.
+**Suíte:** 14 unit/contexto / 35 integração / 0 e2e — alvo 70/20/10 (`PROCESS.md`).
 O desvio é conhecido; o e2e nasce no TR5 deste slice.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; o depósito
 orquestra conta + lançamento; `balanceAfter` é snapshot do use case, não invariante.
 `LedgerEntry` continua append-only (ADR-009); DTOs de conta unificados; ITs limpam com
 `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` fica em `shared.web`.
-**Próximo foco:** TR3 — idempotência da transferência; depois TR4–TR5. O e2e nasce no
+**Próximo foco:** TR4 — concorrência entre chaves e direções; depois TR5. O e2e nasce no
 TR5 e fecha com o extrato.
 
 ## G — gates de publicação
@@ -53,9 +53,9 @@ determinístico, sem retry interno; B1/B2 rejeitadas. Sem migração: `V1` já t
 - [x] **TR2** Erros — mesma conta, origem/destino inexistente, saldo insuficiente, header
       e amount inválidos; rollback sem transação/lançamento. Teste:
       `TransferValidationIT`. — pago 2026-11-22.
-- [ ] **TR3** Idempotência — `201` novo, `200` replay com os `balance_after` armazenados,
+- [x] **TR3** Idempotência — `201` novo, `200` replay com os `balance_after` armazenados,
       `409` para payload/tipo diferente, concorrência com a mesma chave. Teste:
-      `TransferIdempotencyIT`.
+      `TransferIdempotencyIT`. — pago 2026-11-22.
 - [ ] **TR4** Concorrência — chaves diferentes na mesma origem e direções opostas sem
       deadlock/`500`; lock timeout mapeado para `409` retryable. Teste:
       `TransferConcurrencyIT`.
