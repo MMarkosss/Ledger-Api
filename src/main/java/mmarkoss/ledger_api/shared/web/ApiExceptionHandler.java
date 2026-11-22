@@ -8,6 +8,7 @@ import mmarkoss.ledger_api.features.accounts.InvalidAmountException;
 import mmarkoss.ledger_api.features.accounts.InvalidHolderNameException;
 import mmarkoss.ledger_api.features.ledger.AccountHasLedgerEntriesException;
 import mmarkoss.ledger_api.features.ledger.IdempotencyConflictException;
+import mmarkoss.ledger_api.features.transfers.SameAccountTransferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -93,6 +94,14 @@ public class ApiExceptionHandler {
     public ProblemDetail handleNotFound(AccountNotFoundException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         pd.setTitle("Conta não encontrada");
+        return pd;
+    }
+
+    @ExceptionHandler(SameAccountTransferException.class)
+    public ProblemDetail handleSameAccountTransfer(SameAccountTransferException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
+        pd.setTitle("Transferência inválida");
         return pd;
     }
 
