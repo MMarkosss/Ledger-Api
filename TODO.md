@@ -2,16 +2,17 @@
 
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
-**Estado:** slice `transfers` em andamento — TR0–TR1 fechados em 2026-11-21; TR2–TR5 abertos.
-**Suíte:** 14 unit/contexto / 22 integração / 0 e2e — alvo 70/20/10 (`PROCESS.md`).
+**Estado:** slice `transfers` em andamento — TR0–TR1 fechados em 2026-11-21; TR2 fechado
+em 2026-11-22; TR3–TR5 abertos.
+**Suíte:** 14 unit/contexto / 31 integração / 0 e2e — alvo 70/20/10 (`PROCESS.md`).
 O desvio é conhecido; o e2e nasce no TR5 deste slice.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; o depósito
 orquestra conta + lançamento; `balanceAfter` é snapshot do use case, não invariante.
 `LedgerEntry` continua append-only (ADR-009); DTOs de conta unificados; ITs limpam com
 `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` fica em `shared.web`.
-**Próximo foco:** TR2 — erros da transferência; depois TR3–TR5. O e2e nasce no TR5 e
-fecha com o extrato.
+**Próximo foco:** TR3 — idempotência da transferência; depois TR4–TR5. O e2e nasce no
+TR5 e fecha com o extrato.
 
 ## G — gates de publicação
 
@@ -49,9 +50,9 @@ determinístico, sem retry interno; B1/B2 rejeitadas. Sem migração: `V1` já t
 - [x] **TR1** Caminho feliz — controller/service/DTOs em `features/transfers`; débito na
       origem + crédito no destino + dois `ledger_entry` com `counterparty_id`; lock
       ordenado. Teste: `TransferHappyPathIT`. — pago 2026-11-21.
-- [ ] **TR2** Erros — mesma conta, origem/destino inexistente, saldo insuficiente, header
+- [x] **TR2** Erros — mesma conta, origem/destino inexistente, saldo insuficiente, header
       e amount inválidos; rollback sem transação/lançamento. Teste:
-      `TransferValidationIT`.
+      `TransferValidationIT`. — pago 2026-11-22.
 - [ ] **TR3** Idempotência — `201` novo, `200` replay com os `balance_after` armazenados,
       `409` para payload/tipo diferente, concorrência com a mesma chave. Teste:
       `TransferIdempotencyIT`.

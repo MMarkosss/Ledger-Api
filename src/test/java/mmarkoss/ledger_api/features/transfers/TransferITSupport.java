@@ -52,4 +52,16 @@ abstract class TransferITSupport extends IntegrationTestSupport {
                         "amount", new BigDecimal(amount)))
                 .exchange();
     }
+
+    protected RestTestClient.ResponseSpec transferirSemHeader(UUID sourceAccountId,
+                                                              UUID destinationAccountId,
+                                                              String amount) {
+        return rest.post().uri("/transfers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of(
+                        "sourceAccountId", sourceAccountId,
+                        "destinationAccountId", destinationAccountId,
+                        "amount", new BigDecimal(amount)))
+                .exchange();
+    }
 }
