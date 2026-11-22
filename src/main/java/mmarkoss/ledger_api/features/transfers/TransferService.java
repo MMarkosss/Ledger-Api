@@ -96,29 +96,21 @@ public class TransferService {
             throw new AccountNotFoundException(destinationAccountId);
         }
 
-        source.debit(amount);
-        destination.credit(amount);
-
-        LedgerEntry debit = LedgerEntry.debit(
+        TransferPair pair = TransferPair.post(
                 transactionId,
                 sourceAccountId,
-                amount,
-                source.getBalance(),
-                destinationAccountId);
-        LedgerEntry credit = LedgerEntry.credit(
-                transactionId,
+                source,
                 destinationAccountId,
-                amount,
-                destination.getBalance(),
-                sourceAccountId);
+                destination,
+                amount);
 
-        ledgerEntryRepository.save(debit);
-        ledgerEntryRepository.save(credit);
+        ledgerEntryRepository.save(pair.debit());
+        ledgerEntryRepository.save(pair.credit());
 
         return new TransferResult(
                 transactionId,
-                debit.getBalanceAfter(),
-                credit.getBalanceAfter(),
+                pair.debit().getBalanceAfter(),
+                pair.credit().getBalanceAfter(),
                 false);
     }
 

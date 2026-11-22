@@ -14,12 +14,12 @@ entries, idempotent writes, and explicit concurrency behavior.
   retryable conflict handling.
 - Atomic `transaction` + `ledger_entry` writes.
 - Idempotency via the `Idempotency-Key` header.
-- Optimistic locking on the account balance.
+- Optimistic locking for deposits; deterministic pessimistic locking for transfers.
 - Domain errors mapped to explicit HTTP statuses.
 - Flyway migrations and Testcontainers-backed integration tests.
 
-Transfers are implemented at the HTTP integration level. Statements and the end-to-end
-journey arrive with the next slice.
+Statements and the end-to-end journey arrive with the next slice; the transfer journey e2e
+is tracked as D20.
 
 ## Stack
 
@@ -95,6 +95,47 @@ Idempotency contract:
 The payload hash is SHA-256 over `accountId|amount`, with the amount normalized through
 `stripTrailingZeros().toPlainString()`.
 
+### Transfer
+
+```http
+POST /transfers
+Idempotency-Key: 5f0c2a7e-...
+Content-Type: application/json
+
+{
+  "sourceAccountId": "01a1cc41-14f1-71ed-8948-6b1ad2da2e17",
+  "destinationAccountId": "01a1cc41-14f1-71ed-8948-6b1ad2da2e18",
+  "amount": 30.00
+}
+```
+
+Response:
+
+```json
+{
+  "transactionId": "01a1cc41-14f1-71ed-8948-6b1ad2da2e19",
+  "sourceBalance": 70.0000,
+  "destinationBalance": 30.0000
+}
+```
+
+Contract:
+
+- New key: `201 Created`.
+- Same key and same normalized payload: `200 OK`; replay returns the stored
+  `sourceBalance`/`destinationBalance` from the two ledger legs.
+- Same key with different payload or transaction type: `409 Conflict` with
+  `code=IDEMPOTENCY_CONFLICT`.
+- Missing or blank `Idempotency-Key`: `400 Bad Request`.
+- Unknown source or destination account: `404 Not Found`.
+- Same account, invalid amount or insufficient balance: `422 Unprocessable Content`.
+- Lock timeout: `409 Conflict` with `code=CONCURRENCY_CONFLICT` and `retryable=true`.
+
+The payload hash is SHA-256 over `sourceAccountId|destinationAccountId|amount`, with the
+amount normalized through `stripTrailingZeros().toPlainString()`. The two accounts are
+locked with `PESSIMISTIC_WRITE` in UUID order; there is no internal retry. The database
+lock timeout is configurable through `LEDGER_TRANSFER_LOCK_TIMEOUT` (default `2s`).
+
 ## Design decisions
 
 The full records live in [`docs/decisions`](docs/decisions):
@@ -104,9 +145,12 @@ The full records live in [`docs/decisions`](docs/decisions):
 - **Account and ledger as separate features** — `Account` lives in `features/accounts`;
   `LedgerEntry` and `Transaction` live in `features/ledger`. The account-to-ledger
   dependency is explicit: `AccountService` uses `LedgerEntryRepository` for the deletion
-  pre-check, and the deposit use case orchestrates `Account.credit` + `LedgerEntry` in one
-  transaction. `balance_after` is a snapshot supplied by the use case, not a cross-aggregate
-  invariant.
+  pre-check, and the deposit and transfer use cases orchestrate `Account` + `LedgerEntry`
+  in one transaction. `balance_after` is a snapshot supplied by the use case, not a
+  cross-aggregate invariant.
+- **Transfer pairing** — `TransferPair` is a package-private value object local to
+  `features.transfers`. It mutates both accounts and creates the two ledger legs with the
+  post-mutation snapshots; it is not a central posting service.
 - **Append-only ledger** — `LedgerEntry` has no public builder; creation uses validated
   `credit` or `debit` factories, and a database trigger rejects `UPDATE`/`DELETE`.
   Integration tests clear the ledger with `TRUNCATE` (no `CASCADE`).
@@ -119,10 +163,12 @@ The full records live in [`docs/decisions`](docs/decisions):
 - **DELETE arbitration** — the foreign key is the real arbiter for an account with ledger
   entries; `AccountService` owns the policy with an explicit ledger dependency, and the
   pre-check only improves the common message.
-- **Idempotency** — the unique key is global; concurrent duplicates are resolved with
-  `INSERT ... ON CONFLICT (idempotency_key) DO NOTHING` followed by replay.
-- **Concurrency** — the account `@Version` is the optimistic lock; deposit attempts retry
-  on an optimistic conflict.
+- **Idempotency** — the unique key is global; deposit and transfer share the
+  `INSERT ... ON CONFLICT (idempotency_key) DO NOTHING` plus replay contract.
+- **Concurrency** — deposits use the account `@Version` and retry on an optimistic
+  conflict. Transfers use a deterministic pessimistic lock order, a configurable database
+  lock timeout, and map that timeout to `409 CONCURRENCY_CONFLICT` with
+  `retryable=true`.
 
 Process and slice history are documented in [`PROCESS.md`](PROCESS.md),
 [`TODO.md`](TODO.md) and [`docs/history`](docs/history).

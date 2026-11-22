@@ -4,8 +4,8 @@
 **Data:** 2026-11-21
 **Origem:** slice `transfers` (TR0) + decisão A da discussão de concorrência
 
-> Decisão tomada antes do código. A implementação segue em TR1–TR5; o e2e da jornada foi
-> adiado para o extrato. O depósito continua no modelo otimista do ADR-006/011.
+> Decisão tomada antes do código. A implementação foi concluída em TR1–TR5; o e2e da
+> jornada foi adiado para o extrato. O depósito continua no modelo otimista do ADR-006/011.
 
 ## Contexto
 
@@ -80,7 +80,7 @@ e2e/BDD nasce no slice de extrato, junto com D8 e D20.
   o cenário quando o extrato chegar.
 - Cucumber/BDD entra no extrato. O e2e da transferência não conta como BDD e não paga D8.
 
-**Consequência:** TR5 fecha com D19 e documentação; D8 e D20 ficam abertos com gatilho no
+**Consequência:** TR5 fechou com D19 e documentação; D8 e D20 ficam abertos com gatilho no
 extrato.
 
 ## Entradas adversariais
@@ -127,6 +127,9 @@ complexidade sem resolver o problema central.
 
 - `features/transfers` recebe controller, service, DTOs e resultado; `features/ledger`
   continua sendo o kernel de `Transaction`/`LedgerEntry`.
+- O pareamento das pernas é encapsulado em `TransferPair`, value object package-private em
+  `features.transfers`; ele muta as duas contas e cria os dois `LedgerEntry` com o snapshot
+  posterior. Não é um posting service central (ADR-011).
 - `AccountRepository` ganha uma leitura com lock ordenado, usada apenas pela transferência.
 - `ApiExceptionHandler` ganha o erro de mesma conta (`422`) e o conflito de concorrência
   retryable (`409`, código distinto).
@@ -135,10 +138,11 @@ complexidade sem resolver o problema central.
   `LEDGER_TRANSFER_LOCK_TIMEOUT`); o `409` de concorrência usa
   `code=CONCURRENCY_CONFLICT` e `retryable=true`, distinto do
   `IDEMPOTENCY_CONFLICT`.
-- TR1–TR4 implementados; TR5 fecha com D19 (teste unitário do pareamento) e a
-  documentação. O e2e da jornada foi adiado para o extrato (D20).
+- TR1–TR5 concluídos; D19 foi pago com `TransferPair` e `TransferPairingTest`, e a
+  documentação foi fechada. O e2e da jornada foi adiado para o extrato (D20).
 - A suíte cresce sem e2e neste slice; a primeira jornada e2e/BDD nasce no extrato. A
-  distribuição será medida no fechamento, sem declarar convergência.
+  distribuição medida no fechamento foi 15 unit/contexto / 38 integração / 0 e2e (53
+  testes), sem declarar convergência para o alvo 70/20/10.
 - Não há migração de banco nem mudança nas tabelas.
 - D8 permanece aberto; D20 registra o e2e adiado para o extrato. O e2e da transferência
   não é BDD e não paga D8.
