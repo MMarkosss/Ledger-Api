@@ -76,12 +76,14 @@ class TransferIdempotencyIT extends TransferITSupport {
         transferir(source, destination, "trf-1", "40.00")
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody()
-                .jsonPath("$.title").isEqualTo("Conflito de idempotência");
+                .jsonPath("$.title").isEqualTo("Conflito de idempotência")
+                .jsonPath("$.code").isEqualTo("IDEMPOTENCY_CONFLICT");
 
         transferir(destination, source, "trf-1", "30.00")
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody()
-                .jsonPath("$.title").isEqualTo("Conflito de idempotência");
+                .jsonPath("$.title").isEqualTo("Conflito de idempotência")
+                .jsonPath("$.code").isEqualTo("IDEMPOTENCY_CONFLICT");
 
         assertThat(transferencias()).isEqualTo(1);
         assertThat(lancamentos()).isEqualTo(3);
@@ -99,7 +101,8 @@ class TransferIdempotencyIT extends TransferITSupport {
         transferir(source, destination, "shared-key", "30.00")
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody()
-                .jsonPath("$.title").isEqualTo("Conflito de idempotência");
+                .jsonPath("$.title").isEqualTo("Conflito de idempotência")
+                .jsonPath("$.code").isEqualTo("IDEMPOTENCY_CONFLICT");
 
         assertThat(transferencias()).isZero();
         assertThat(lancamentos()).isEqualTo(1);

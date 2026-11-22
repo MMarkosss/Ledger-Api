@@ -4,7 +4,7 @@
 > status e implementação para a revisão de fechamento de slice (regra 13 do `PROCESS.md`).
 > A revisão completa acontece depois do debate de arquitetura e antes de fechar o slice.
 
-**Última sincronização:** 2026-11-21
+**Última sincronização:** 2026-11-22
 
 | ADR | Título | Status | Implementação | Observação |
 |---|---|---|---|---|
@@ -19,7 +19,7 @@
 | [009](009-ledger-entry-append-only.md) | `LedgerEntry` append-only: construção e persistência | accepted (amended by 011) | `LedgerEntry.credit/debit` públicas + `@Immutable` + repositório enxuto + `V3` trigger + `LedgerEntryAppendOnlyIT` | Q1/Q2 mantidos; `balanceAfter` é snapshot do use case |
 | [010](010-conta-e-ledger-no-mesmo-contexto.md) | Conta e ledger no mesmo contexto; posting service | superseded by 011 | histórico | LC1–LC4 implementados e revertidos; opção A adotada |
 | [011](011-dependencia-explicita-accounts-ledger.md) | Conta fora do ledger e dependência explícita | accepted | `features.accounts.Account` + `AccountService` -> `LedgerEntryRepository` + `DepositAttemptService` orquestra | Substitui 010; D6 pago |
-| [012](012-transferencia-duas-pernas-lock-deterministico.md) | Transferência: duas pernas e lock determinístico | accepted | `features.transfers` + lock `PESSIMISTIC_WRITE` ordenado por UUID + dois `ledger_entry` | TR0–TR3 fechados; B1/B2 rejeitadas; sem migração |
+| [012](012-transferencia-duas-pernas-lock-deterministico.md) | Transferência: duas pernas e lock determinístico | accepted | `features.transfers` + lock `PESSIMISTIC_WRITE` ordenado por UUID + dois `ledger_entry` + timeout `409` retryable | TR0–TR4 fechados; B1/B2 rejeitadas; sem migração |
 
 ## Checklist de fechamento
 

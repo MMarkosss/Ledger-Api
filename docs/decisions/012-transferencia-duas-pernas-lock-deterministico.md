@@ -107,8 +107,13 @@ complexidade sem resolver o problema central.
 - `AccountRepository` ganha uma leitura com lock ordenado, usada apenas pela transferência.
 - `ApiExceptionHandler` ganha o erro de mesma conta (`422`) e o conflito de concorrência
   retryable (`409`, código distinto).
-- TR1 cobre o caminho feliz; TR2 os erros; TR3 a idempotência; TR4 a concorrência; TR5 o
-  e2e, o D19 (teste unitário do pareamento) e a documentação.
+- O lock timeout é aplicado via `spring.datasource.hikari.connection-init-sql` com a
+  propriedade `ledger.transfer.lock-timeout` (default `2s`, configurável por
+  `LEDGER_TRANSFER_LOCK_TIMEOUT`); o `409` de concorrência usa
+  `code=CONCURRENCY_CONFLICT` e `retryable=true`, distinto do
+  `IDEMPOTENCY_CONFLICT`.
+- TR1–TR4 implementados; TR5 fecha com o e2e, o D19 (teste unitário do pareamento) e a
+  documentação.
 - A suíte sai de 35 testes e ganha a primeira jornada e2e; a distribuição será medida no
   fechamento, sem declarar convergência.
 - Não há migração de banco nem mudança nas tabelas.

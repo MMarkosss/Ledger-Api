@@ -1,5 +1,7 @@
 package mmarkoss.ledger_api.shared.web;
 
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import mmarkoss.ledger_api.features.accounts.AccountNotFoundException;
 import mmarkoss.ledger_api.features.accounts.DuplicateDocumentException;
@@ -11,6 +13,7 @@ import mmarkoss.ledger_api.features.ledger.IdempotencyConflictException;
 import mmarkoss.ledger_api.features.transfers.SameAccountTransferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -123,6 +126,21 @@ public class ApiExceptionHandler {
     public ProblemDetail handleIdempotencyConflict(IdempotencyConflictException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         pd.setTitle("Conflito de idempotência");
+        pd.setProperty("code", "IDEMPOTENCY_CONFLICT");
+        return pd;
+    }
+
+    @ExceptionHandler({
+            PessimisticLockingFailureException.class,
+            PessimisticLockException.class,
+            LockTimeoutException.class
+    })
+    public ProblemDetail handleConcurrencyConflict(RuntimeException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT, "Conflito de concorrência; tente novamente");
+        pd.setTitle("Conflito de concorrência");
+        pd.setProperty("code", "CONCURRENCY_CONFLICT");
+        pd.setProperty("retryable", true);
         return pd;
     }
 
