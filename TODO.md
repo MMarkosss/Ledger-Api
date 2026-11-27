@@ -2,8 +2,9 @@
 
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
-**Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; núcleo funcional completo.
-**Suíte:** 15 unit/contexto / 45 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
+**Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; núcleo funcional
+completo. Próximo: passos 6–7 do roteiro — concorrência e envelope.
+**Suíte:** 15 unit/contexto / 46 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
 O desvio é conhecido; a primeira jornada e2e/BDD está no extrato.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; depósito e
@@ -12,8 +13,11 @@ invariante. `LedgerEntry` continua append-only (ADR-009); DTOs de conta unificad
 limpam com `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` fica em
 `shared.web`. O extrato lê o kernel por cursor `id` com `desc` default e `asc` para
 auditoria (ADR-013); soft delete foi adiado (ADR-014).
-**Próximo foco:** D13 — arquitetura de erros curada; o gatilho “todos os slices + e2e
-verde” foi atingido. R10 continua gate humano.
+**Próximo foco:** passo 6 do roteiro — concorrência com o happy path fechado: drenagem
+competitiva coberta; restam a interação depósito × transferência na mesma conta, o escopo
+do `lock_timeout` (D22) e o conflito otimista fora dos retries (D23). D13 tem o gatilho
+atingido e anda junto. Passo 7 — envelope: CI (`verify` no push/PR), `prometheus` e README
+alinhado no `statements` já existem; resta a revisão final e o gate humano R10.
 
 ## G — gates de publicação
 
@@ -32,6 +36,14 @@ verde” foi atingido. R10 continua gate humano.
 - [ ] **D21** Camada de enriquecimento do extrato — nome/descrição da contraparte para
       humano/UI, testes unitários e apresentação. Gatilho subjetivo: conclusão do projeto
       core; não bloqueia o fechamento funcional atual.
+- [ ] **D22** Escopo do `lock_timeout` — hoje global por conexão
+      (`connection-init-sql`), valendo para depósito e leitura, não só para a
+      transferência (ADR-012); avaliar `SET LOCAL` na transação da transferência ou
+      timeout por operação. Gatilho: pendente de analise.
+- [ ] **D23** Conflito otimista fora dos retries — hoje
+      `ObjectOptimisticLockingFailureException` (ex.: renome concorrente a um
+      depósito) vira 500; decidir mapear para 409 retryable ou absorver no D13.
+      Gatilho: pendente de analise.
 
 Fechados ou absorvidos: **D4, D6, D8, D9, D12, D14, D16, D18, D19, D20**; **D11**
 superseded por R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.

@@ -88,6 +88,24 @@ class TransferConcurrencyIT extends TransferITSupport {
     }
 
     @Test
+    @DisplayName("Transferências concorrentes que juntas excedem o saldo passam exatamente uma")
+    void deveProcessarExatamenteUmaTransferenciaQuandoConcorrentesExcedemOSaldo() throws Exception {
+        UUID source = criarConta(HOLDER_SOURCE, DOC_SOURCE);
+        UUID destination = criarConta(HOLDER_DESTINATION, DOC_DESTINATION);
+        depositar(source, "dep-1", "100.00").expectStatus().isCreated();
+
+        List<Integer> statuses = executarJuntos(
+                () -> transferirStatus(source, destination, "trf-a", "60.00"),
+                () -> transferirStatus(source, destination, "trf-b", "60.00"));
+
+        assertThat(statuses).containsExactlyInAnyOrder(201, 422);
+        assertThat(transferencias()).isEqualTo(1);
+        assertThat(lancamentos()).isEqualTo(3);
+        assertThat(saldo(source)).isEqualByComparingTo("40");
+        assertThat(saldo(destination)).isEqualByComparingTo("60");
+    }
+
+    @Test
     @DisplayName("Transferências em direções opostas não formam deadlock")
     void deveProcessarDirecoesOpostasSemDeadlock() throws Exception {
         UUID first = criarConta(HOLDER_SOURCE, DOC_SOURCE);

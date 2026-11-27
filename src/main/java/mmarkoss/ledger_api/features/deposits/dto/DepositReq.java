@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 public record DepositReq(
         @NotNull(message = "Informe o valor")
-        @Digits(integer = 19, fraction = 4)
+        @Digits(integer = 15, fraction = 4)
         BigDecimal amount
 ) {
 }

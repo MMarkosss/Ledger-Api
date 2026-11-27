@@ -12,7 +12,7 @@ public record TransferReq(
         @NotNull(message = "Informe a conta de destino")
         UUID destinationAccountId,
         @NotNull(message = "Informe o valor")
-        @Digits(integer = 19, fraction = 4)
+        @Digits(integer = 15, fraction = 4)
         BigDecimal amount
 ) {
 }
