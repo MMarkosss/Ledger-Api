@@ -12,6 +12,8 @@ import mmarkoss.ledger_api.features.ledger.TransactionRepository;
 import mmarkoss.ledger_api.features.ledger.TransactionStatus;
 import mmarkoss.ledger_api.features.ledger.TransactionType;
 import org.hibernate.id.uuid.UuidVersion7Strategy;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,13 +37,19 @@ public class TransferService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private final String lockTimeout;
 
     public TransferService(AccountRepository accountRepository,
                            TransactionRepository transactionRepository,
-                           LedgerEntryRepository ledgerEntryRepository) {
+                           LedgerEntryRepository ledgerEntryRepository,
+                           JdbcTemplate jdbcTemplate,
+                           @Value("${ledger.transfer.lock-timeout}") String lockTimeout) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
+        this.jdbcTemplate = jdbcTemplate;
+        this.lockTimeout = lockTimeout;
     }
 
     @Transactional
@@ -54,6 +62,7 @@ public class TransferService {
         }
 
         Account.validateAmount(amount);
+        applyLockTimeout();
 
         String payloadHash = IdempotencyHash.sha256(
                 sourceAccountId + "|" + destinationAccountId + "|"
@@ -112,6 +121,13 @@ public class TransferService {
                 pair.debit().getBalanceAfter(),
                 pair.credit().getBalanceAfter(),
                 false);
+    }
+
+    private void applyLockTimeout() {
+        jdbcTemplate.queryForObject(
+                "select set_config('lock_timeout', ?, true)",
+                String.class,
+                lockTimeout);
     }
 
     private TransferResult replay(Transaction transaction,

@@ -133,10 +133,11 @@ complexidade sem resolver o problema central.
 - `AccountRepository` ganha uma leitura com lock ordenado, usada apenas pela transferência.
 - `ApiExceptionHandler` ganha o erro de mesma conta (`422`) e o conflito de concorrência
   retryable (`409`, código distinto).
-- O lock timeout é aplicado via `spring.datasource.hikari.connection-init-sql` com a
-  propriedade `ledger.transfer.lock-timeout` (default `2s`, configurável por
-  `LEDGER_TRANSFER_LOCK_TIMEOUT`); o `409` de concorrência usa
-  `code=CONCURRENCY_CONFLICT` e `retryable=true`, distinto do
+- O lock timeout é aplicado por `SET LOCAL`/`set_config('lock_timeout', ..., true)`
+  dentro da transação da transferência, com a propriedade
+  `ledger.transfer.lock-timeout` (default `2s`, configurável por
+  `LEDGER_TRANSFER_LOCK_TIMEOUT`); não é global por conexão (D22). O `409` de concorrência
+  usa `code=CONCURRENCY_CONFLICT` e `retryable=true`, distinto do
   `IDEMPOTENCY_CONFLICT`.
 - TR1–TR5 concluídos; D19 foi pago com `TransferPair` e `TransferPairingTest`, e a
   documentação foi fechada. O e2e da jornada foi adiado naquele momento e pago no extrato.
@@ -147,6 +148,10 @@ complexidade sem resolver o problema central.
 - D8 e D20 foram pagos no slice `statements` (2026-11-24): o cenário Cucumber cobre
   create → deposit → transfer idempotente → statement. O e2e antigo da transferência
   sozinho não pagaria D8; a jornada com extrato paga.
+- **D22 pago em 2026-11-27:** o timeout deixou de ser global por conexão
+  (`connection-init-sql`) e passou a ser local à transação da transferência. Um depósito
+  concorrente na mesma conta não é abortado pela política da transferência; a cobertura
+  está em `TransferConcurrencyIT`.
 
 ## Gatilho de reabertura
 

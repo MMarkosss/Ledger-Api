@@ -4,7 +4,7 @@
 > status e implementação para a revisão de fechamento de slice (regra 13 do `PROCESS.md`).
 > A revisão completa acontece depois do debate de arquitetura e antes de fechar o slice.
 
-**Última sincronização:** 2026-11-26
+**Última sincronização:** 2026-11-27
 
 | ADR | Título | Status | Implementação | Observação |
 |---|---|---|---|---|
@@ -19,7 +19,7 @@
 | [009](009-ledger-entry-append-only.md) | `LedgerEntry` append-only: construção e persistência | accepted (amended by 011) | `LedgerEntry.credit/debit` públicas + `@Immutable` + repositório enxuto + `V3` trigger + `LedgerEntryAppendOnlyIT` | Q1/Q2 mantidos; `balanceAfter` é snapshot do use case |
 | [010](010-conta-e-ledger-no-mesmo-contexto.md) | Conta e ledger no mesmo contexto; posting service | superseded by 011 | histórico | LC1–LC4 implementados e revertidos; opção A adotada |
 | [011](011-dependencia-explicita-accounts-ledger.md) | Conta fora do ledger e dependência explícita | accepted | `features.accounts.Account` + `AccountService` -> `LedgerEntryRepository` + `DepositAttemptService`/`TransferService` orquestram | Substitui 010; D6 pago; transferência reusa a dependência explícita |
-| [012](012-transferencia-duas-pernas-lock-deterministico.md) | Transferência: duas pernas e lock determinístico | accepted | `features.transfers` + `TransferPair` + lock `PESSIMISTIC_WRITE` ordenado por UUID + dois `ledger_entry` + timeout `409` retryable | TR0–TR5 fechados; D19 pago; D20 pago no extrato; B1/B2 rejeitadas; sem migração |
+| [012](012-transferencia-duas-pernas-lock-deterministico.md) | Transferência: duas pernas e lock determinístico | accepted | `features.transfers` + `TransferPair` + lock `PESSIMISTIC_WRITE` ordenado por UUID + dois `ledger_entry` + timeout `409` retryable | TR0–TR5 fechados; D19 pago; D20 pago no extrato; D22 pago (timeout local); B1/B2 rejeitadas; sem migração |
 | [013](013-extrato-leitura-por-conta-cursor-e-auditoria.md) | Extrato: leitura por conta, cursor e ordem auditável | accepted | `features.statements` + `Slice<LedgerEntry>` + `cursor`/`limit` + `desc` default e `asc` auditoria + `Statement*IT` + Cucumber e2e conciliando C/D | D8/D20 pagos; e2e cobre espelhamento, cadeia e saldo final; `entryId` global expõe volume; sem migração |
 | [014](014-ciclo-de-vida-da-conta-hard-delete-e-soft-delete.md) | Ciclo de vida da conta: hard delete e soft delete adiado | accepted | `DELETE` guard + FK; sem `deleted_at` | D5 adiado; gatilho: desativar/ler conta com histórico |
 

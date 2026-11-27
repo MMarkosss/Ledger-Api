@@ -12,6 +12,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -147,5 +151,37 @@ class TransferConcurrencyIT extends TransferITSupport {
         assertThat(lancamentos()).isEqualTo(1);
         assertThat(saldo(source)).isEqualByComparingTo("100");
         assertThat(saldo(destination)).isEqualByComparingTo("0");
+    }
+
+    @Test
+    @DisplayName("Lock timeout da transferência não aborta depósito na mesma conta")
+    void naoDeveAplicarLockTimeoutDaTransferenciaAoDeposito() throws Exception {
+        UUID account = criarConta(HOLDER_SOURCE, DOC_SOURCE);
+        depositar(account, "dep-1", "100.00").expectStatus().isCreated();
+
+        Connection holder = segurarLock(account);
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<Integer> deposit = pool.submit(() -> depositar(account, "dep-2", "50.00")
+                    .returnResult().getStatus().value());
+
+            // O timeout da transferência é 1s neste IT. O depósito deve continuar esperando
+            // o lock da conta e concluir depois que o holder liberar.
+            Thread.sleep(1500);
+            assertThat(deposit.isDone()).isFalse();
+
+            liberarLock(holder);
+            holder = null;
+
+            assertThat(deposit.get(15, TimeUnit.SECONDS)).isEqualTo(201);
+        } finally {
+            if (holder != null) {
+                liberarLock(holder);
+            }
+            pool.shutdownNow();
+        }
+
+        assertThat(saldo(account)).isEqualByComparingTo("150");
+        assertThat(lancamentos()).isEqualTo(2);
     }
 }

@@ -135,7 +135,9 @@ Contract:
 The payload hash is SHA-256 over `sourceAccountId|destinationAccountId|amount`, with the
 amount normalized through `stripTrailingZeros().toPlainString()`. The two accounts are
 locked with `PESSIMISTIC_WRITE` in UUID order; there is no internal retry. The database
-lock timeout is configurable through `LEDGER_TRANSFER_LOCK_TIMEOUT` (default `2s`).
+lock timeout is configurable through `LEDGER_TRANSFER_LOCK_TIMEOUT` (default `2s`) and is
+applied with `SET LOCAL` inside the transfer transaction, so deposits and reads do not
+inherit it.
 
 ### Statement
 
@@ -221,8 +223,8 @@ The full records live in [`docs/decisions`](docs/decisions):
 - **Idempotency** — the unique key is global; deposit and transfer share the
   `INSERT ... ON CONFLICT (idempotency_key) DO NOTHING` plus replay contract.
 - **Concurrency** — deposits use the account `@Version` and retry on an optimistic
-  conflict. Transfers use a deterministic pessimistic lock order, a configurable database
-  lock timeout, and map that timeout to `409 CONCURRENCY_CONFLICT` with
+  conflict. Transfers use a deterministic pessimistic lock order, a transaction-scoped
+  database lock timeout, and map that timeout to `409 CONCURRENCY_CONFLICT` with
   `retryable=true`.
 
 Process and slice history are documented in [`PROCESS.md`](PROCESS.md),

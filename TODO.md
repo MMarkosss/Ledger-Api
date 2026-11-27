@@ -2,9 +2,10 @@
 
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
-**Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; núcleo funcional
-completo. Próximo: passos 6–7 do roteiro — concorrência e envelope.
-**Suíte:** 15 unit/contexto / 46 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
+**Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; passo 6 em
+andamento. D22 pago em 2026-11-27; próximo: interação depósito × transferência na mesma
+conta e D23/D13.
+**Suíte:** 15 unit/contexto / 47 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
 O desvio é conhecido; a primeira jornada e2e/BDD está no extrato.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; depósito e
@@ -14,10 +15,11 @@ limpam com `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` 
 `shared.web`. O extrato lê o kernel por cursor `id` com `desc` default e `asc` para
 auditoria (ADR-013); soft delete foi adiado (ADR-014).
 **Próximo foco:** passo 6 do roteiro — concorrência com o happy path fechado: drenagem
-competitiva coberta; restam a interação depósito × transferência na mesma conta, o escopo
-do `lock_timeout` (D22) e o conflito otimista fora dos retries (D23). D13 tem o gatilho
-atingido e anda junto. Passo 7 — envelope: CI (`verify` no push/PR), `prometheus` e README
-alinhado no `statements` já existem; resta a revisão final e o gate humano R10.
+competitiva coberta e D22 pago; restam a interação depósito × transferência na mesma conta
+e o conflito otimista fora dos retries (D23), absorvido pelo D13. D13 tem o gatilho
+atingido e entra antes do passo 7. Passo 7 — envelope: CI (`verify` no push/PR),
+`prometheus` e README alinhado no `statements` já existem; resta a revisão final e o gate
+humano R10.
 
 ## G — gates de publicação
 
@@ -30,22 +32,17 @@ alinhado no `statements` já existem; resta a revisão final e o gate humano R10
       precisar desativar ou continuar lendo uma conta com histórico.
 - [ ] **D7** `updated_at` autoritativo no banco (trigger) — gatilho: auditoria.
 - [ ] **D13** Arquitetura de erros curada — `DomainException`, `NoResourceFoundException` →
-      404, `traceId`, `include-message/stacktrace=never`, auditoria de mensagens. Gatilho:
-      todos os slices encerrados + e2e verde.
+      404, `traceId`, `include-message/stacktrace=never`, auditoria de mensagens; absorve
+      D23. Gatilho: todos os slices encerrados + e2e verde.
 - [ ] **D15** PATCH sem semântica parcial — gatilho: demanda real.
 - [ ] **D21** Camada de enriquecimento do extrato — nome/descrição da contraparte para
       humano/UI, testes unitários e apresentação. Gatilho subjetivo: conclusão do projeto
       core; não bloqueia o fechamento funcional atual.
-- [ ] **D22** Escopo do `lock_timeout` — hoje global por conexão
-      (`connection-init-sql`), valendo para depósito e leitura, não só para a
-      transferência (ADR-012); avaliar `SET LOCAL` na transação da transferência ou
-      timeout por operação. Gatilho: pendente de analise.
-- [ ] **D23** Conflito otimista fora dos retries — hoje
-      `ObjectOptimisticLockingFailureException` (ex.: renome concorrente a um
-      depósito) vira 500; decidir mapear para 409 retryable ou absorver no D13.
-      Gatilho: pendente de analise.
+- [ ] **D23** Conflito otimista fora dos retries — `ObjectOptimisticLockingFailureException`
+      (ex.: renome concorrente a um depósito) vira 500. Decisão 2026-11-27: absorver no
+      D13, que mapeia para `409 CONCURRENCY_CONFLICT` retryable.
 
-Fechados ou absorvidos: **D4, D6, D8, D9, D12, D14, D16, D18, D19, D20**; **D11**
+Fechados ou absorvidos: **D4, D6, D8, D9, D12, D14, D16, D18, D19, D20, D22**; **D11**
 superseded por R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
 
 ## Slices encerrados
