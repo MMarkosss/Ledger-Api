@@ -28,8 +28,8 @@ As operações são fatias verticais de primeiro nível:
 features/
   accounts/
   deposits/
-  transfers/    # futura
-  statements/   # futura
+  transfers/
+  statements/
   ledger/       # kernel
 ```
 
@@ -39,7 +39,7 @@ Direção de dependência:
 accounts   -> ledger          # deleção: existsByAccountId + FK + exceção do ledger
 deposits   -> accounts + ledger
 transfers  -> accounts + ledger
-statements -> ledger (+ accounts se a resposta precisar)
+statements -> accounts + ledger   # conta para 404; ledger para a leitura
 ledger     -> nenhuma fatia, nem accounts
 ```
 
@@ -70,7 +70,9 @@ válidos.
 ## Consequências
 
 - `features/ledger` não depende de `accounts` nem de fatias.
-- `transfers` e `statements` nascem em pacotes próprios e reutilizam o kernel.
+- `transfers` e `statements` nascem em pacotes próprios e reutilizam o kernel; `statements`
+  foi implementado em 2026-11-24 lendo `LedgerEntry` e `Transaction` sem mover regra para o
+  kernel.
 - Imports e testes de depósito passam a apontar para `features.deposits`.
 - No fechamento L3, o fatiamento de testes (item 4) e o `AccountContractIT` (item 5) não
   foram tocados; ambos foram encerrados depois, no slice `test-isolation` (ADR-008), sem

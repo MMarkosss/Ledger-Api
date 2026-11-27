@@ -12,14 +12,13 @@ entries, idempotent writes, and explicit concurrency behavior.
 - Deposits through `POST /accounts/{id}/deposits`.
 - Transfers through `POST /transfers`, with deterministic pessimistic locking and
   retryable conflict handling.
+- Statements through `GET /accounts/{id}/statements`, with cursor pagination in both
+  human (`desc`) and audit (`asc`) order.
 - Atomic `transaction` + `ledger_entry` writes.
 - Idempotency via the `Idempotency-Key` header.
 - Optimistic locking for deposits; deterministic pessimistic locking for transfers.
 - Domain errors mapped to explicit HTTP statuses.
-- Flyway migrations and Testcontainers-backed integration tests.
-
-Statements and the end-to-end journey arrive with the next slice; the transfer journey e2e
-is tracked as D20.
+- Flyway migrations, Testcontainers-backed integration tests and a Cucumber e2e journey.
 
 ## Stack
 
@@ -29,6 +28,7 @@ is tracked as D20.
 - PostgreSQL 18
 - Flyway
 - Testcontainers
+- Cucumber (e2e)
 - Maven Wrapper
 
 ## Run locally
@@ -60,6 +60,7 @@ password). They are development-only values.
 | `POST` | `/accounts` | Create an account |
 | `GET` | `/accounts` | List accounts (paginated) |
 | `GET` | `/accounts/{id}` | Read one account |
+| `GET` | `/accounts/{id}/statements` | Read the account statement (cursor paginated) |
 | `PUT` / `PATCH` | `/accounts/{id}` | Rename the holder |
 | `DELETE` | `/accounts/{id}` | Delete an account without ledger entries |
 
@@ -136,6 +137,51 @@ amount normalized through `stripTrailingZeros().toPlainString()`. The two accoun
 locked with `PESSIMISTIC_WRITE` in UUID order; there is no internal retry. The database
 lock timeout is configurable through `LEDGER_TRANSFER_LOCK_TIMEOUT` (default `2s`).
 
+### Statement
+
+```http
+GET /accounts/{id}/statements?limit=20&order=desc
+```
+
+Response:
+
+```json
+{
+  "order": "desc",
+  "entries": [
+    {
+      "entryId": 42,
+      "transactionId": "01a1cc41-14f1-71ed-8948-6b1ad2da2e19",
+      "type": "TRANSFER",
+      "direction": "DEBIT",
+      "amount": 30.0000,
+      "balanceAfter": 70.0000,
+      "counterpartyId": "01a1cc41-14f1-71ed-8948-6b1ad2da2e18",
+      "createdAt": "2026-11-24T12:00:00Z"
+    }
+  ],
+  "nextCursor": 42,
+  "hasMore": true
+}
+```
+
+Contract:
+
+- `order=desc` is the default human order; `order=asc` is the audit order.
+- Ordering is always by `ledger_entry.id`; `createdAt` is metadata, not the sort key.
+- `cursor` is exclusive: `desc` returns `id < cursor`, `asc` returns `id > cursor`.
+- `limit` defaults to `20`, minimum `1`, maximum `100`.
+- `nextCursor` is the last `entryId` when `hasMore` is true; pass it back as `cursor`.
+- Existing account with no entries: `200 OK` with an empty list.
+- Unknown account: `404 Not Found`.
+- Invalid account id (not a UUID) or invalid `limit`, `cursor` or `order`: `400 Bad Request`.
+
+The endpoint reads the ledger directly; there is no materialized statement table. The
+current balance is not included: each line carries its historical `balanceAfter`, and
+`GET /accounts/{id}` remains the live balance source. The `entryId` is a global
+`BIGSERIAL`, so exposing it also exposes the ledger's volume/rate; that consequence is
+accepted in ADR-013.
+
 ## Design decisions
 
 The full records live in [`docs/decisions`](docs/decisions):
@@ -151,6 +197,15 @@ The full records live in [`docs/decisions`](docs/decisions):
 - **Transfer pairing** — `TransferPair` is a package-private value object local to
   `features.transfers`. It mutates both accounts and creates the two ledger legs with the
   post-mutation snapshots; it is not a central posting service.
+- **Statement read model** — `features.statements` reads `ledger_entry` directly by
+  account, with a cursor on `id`; `desc` is the human default and `asc` is the audit
+  order. No materialized statement table is introduced.
+- **Account lifecycle** — `DELETE` remains a hard delete and is blocked when the account
+  has ledger entries. Soft delete is deferred; the trigger is a product/audit requirement
+  to deactivate or read an account after removal (ADR-014).
+- **Entry id exposure** — `ledger_entry.id` is a global `BIGSERIAL`. Exposing it as
+  `entryId`/cursor reveals the ledger's volume and rate, not just one account's volume;
+  this is accepted as the price of strict audit ordering (ADR-013).
 - **Append-only ledger** — `LedgerEntry` has no public builder; creation uses validated
   `credit` or `debit` factories, and a database trigger rejects `UPDATE`/`DELETE`.
   Integration tests clear the ledger with `TRUNCATE` (no `CASCADE`).
@@ -180,5 +235,7 @@ Process and slice history are documented in [`PROCESS.md`](PROCESS.md),
 ```
 
 Integration tests use Testcontainers, so Docker must be available. The suite is split
-between domain/unit tests and HTTP contract tests; the target pyramid is roughly
-70% unit / 20% integration / 10% e2e, with the e2e journey arriving with statements.
+between domain/unit tests, HTTP contract tests and one Cucumber e2e journey
+(create → deposit → idempotent transfer → both statements, with pair reconciliation,
+`balance_after` chain continuity and final balance check). The target pyramid is roughly
+70% unit / 20% integration / 10% e2e; the live distribution is tracked in `TODO.md`.

@@ -62,6 +62,7 @@ classes de contrato largas, misturando vários comportamentos (item 4).
   comportamento; os testes e helpers equivalentes foram preservados.
 - Todo IT novo deve estender `IntegrationTestSupport` (ou um support de fatia que estenda).
 - A limpeza `TRUNCATE` é consequência do ADR-009; `TRUNCATE ... CASCADE` continua rejeitado.
+  O e2e Cucumber reutiliza a mesma lista de tabelas no hook de cenário.
 - A decisão de não usar `@Order` encerra D18 sem implementação.
 
 ## Gatilho de reabertura

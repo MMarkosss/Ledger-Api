@@ -76,7 +76,7 @@ tópico é tocado.
 |---|---|---|
 | **Unit (~70%)** | Regra isolada (domínio/entidade), sem Spring e sem banco | JUnit + AssertJ, milissegundos |
 | **Integração (~20%)** | Contrato HTTP por endpoint, atravessando Controller→Service→Repository→Postgres real | `@SpringBootTest(RANDOM_PORT)` + `RestTestClient` + Testcontainers |
-| **E2E (~10%)** | Jornada multi-endpoint com estado acumulado e regra dura do negócio (ex.: depósito + transferência idempotente + extrato) | Fluxo encadeado; só após `deposit`/`transfer`/extrato |
+| **E2E (~10%)** | Jornada multi-endpoint com estado acumulado e regra dura do negócio (ex.: depósito + transferência idempotente + extratos conciliados) | Fluxo encadeado; só após `deposit`/`transfer`/extrato |
 
 Distribuição viva no `TODO.md`. O e2e nasce no extrato, junto com D8/D20 (ADR-012); a
 transferência fecha sem e2e para não duplicar os ITs e só prova a jornada quando o extrato
@@ -84,6 +84,8 @@ existe.
 
 ## Changelog de emendas
 
+- **2026-11-26** — exemplo da camada e2e atualizado para “extratos conciliados” após o
+  reforço do cenário Cucumber; nenhuma regra de processo mudou.
 - **2026-11-22** — e2e da transferência adiado para o extrato (D20), junto com D8/BDD;
   justificativa no ADR-012: o `TransferHappyPathIT` já cobre o fluxo atual e, sem extrato,
   a jornada não prova auditabilidade nem ordem do ledger.

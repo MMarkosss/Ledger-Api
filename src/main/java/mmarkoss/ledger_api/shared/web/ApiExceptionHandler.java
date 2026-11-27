@@ -10,6 +10,7 @@ import mmarkoss.ledger_api.features.accounts.InvalidAmountException;
 import mmarkoss.ledger_api.features.accounts.InvalidHolderNameException;
 import mmarkoss.ledger_api.features.ledger.AccountHasLedgerEntriesException;
 import mmarkoss.ledger_api.features.ledger.IdempotencyConflictException;
+import mmarkoss.ledger_api.features.statements.InvalidStatementQueryException;
 import mmarkoss.ledger_api.features.transfers.SameAccountTransferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 
@@ -65,6 +67,22 @@ public class ApiExceptionHandler {
     public ProblemDetail handleInvalidIdempotencyKey(InvalidIdempotencyKeyException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, ex.getMessage());
+        pd.setTitle("Requisição inválida");
+        return pd;
+    }
+
+    @ExceptionHandler(InvalidStatementQueryException.class)
+    public ProblemDetail handleInvalidStatementQuery(InvalidStatementQueryException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        pd.setTitle("Consulta inválida");
+        return pd;
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Parâmetro inválido: " + ex.getName());
         pd.setTitle("Requisição inválida");
         return pd;
     }

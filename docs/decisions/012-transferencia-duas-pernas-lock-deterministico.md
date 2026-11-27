@@ -80,8 +80,8 @@ e2e/BDD nasce no slice de extrato, junto com D8 e D20.
   o cenário quando o extrato chegar.
 - Cucumber/BDD entra no extrato. O e2e da transferência não conta como BDD e não paga D8.
 
-**Consequência:** TR5 fechou com D19 e documentação; D8 e D20 ficam abertos com gatilho no
-extrato.
+**Consequência:** TR5 fechou com D19 e documentação; D8 e D20 ficaram abertos com gatilho
+no extrato e foram pagos lá em 2026-11-24.
 
 ## Entradas adversariais
 
@@ -139,13 +139,14 @@ complexidade sem resolver o problema central.
   `code=CONCURRENCY_CONFLICT` e `retryable=true`, distinto do
   `IDEMPOTENCY_CONFLICT`.
 - TR1–TR5 concluídos; D19 foi pago com `TransferPair` e `TransferPairingTest`, e a
-  documentação foi fechada. O e2e da jornada foi adiado para o extrato (D20).
+  documentação foi fechada. O e2e da jornada foi adiado naquele momento e pago no extrato.
 - A suíte cresce sem e2e neste slice; a primeira jornada e2e/BDD nasce no extrato. A
   distribuição medida no fechamento foi 15 unit/contexto / 38 integração / 0 e2e (53
   testes), sem declarar convergência para o alvo 70/20/10.
 - Não há migração de banco nem mudança nas tabelas.
-- D8 permanece aberto; D20 registra o e2e adiado para o extrato. O e2e da transferência
-  não é BDD e não paga D8.
+- D8 e D20 foram pagos no slice `statements` (2026-11-24): o cenário Cucumber cobre
+  create → deposit → transfer idempotente → statement. O e2e antigo da transferência
+  sozinho não pagaria D8; a jornada com extrato paga.
 
 ## Gatilho de reabertura
 

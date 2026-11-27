@@ -2,16 +2,18 @@
 
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
-**Estado:** nenhum slice ativo — `transfers` encerrado em 2026-11-22. Próximo: extrato.
-**Suíte:** 15 unit/contexto / 38 integração / 0 e2e — alvo 70/20/10 (`PROCESS.md`).
-O desvio é conhecido; a primeira jornada e2e/BDD nasce no extrato.
+**Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; núcleo funcional completo.
+**Suíte:** 15 unit/contexto / 45 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
+O desvio é conhecido; a primeira jornada e2e/BDD está no extrato.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; depósito e
 transferência orquestram conta + lançamento; `balanceAfter` é snapshot do use case, não
 invariante. `LedgerEntry` continua append-only (ADR-009); DTOs de conta unificados; ITs
 limpam com `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` fica em
-`shared.web`.
-**Próximo foco:** abrir o slice de extrato; D5/D8/D9/D20 ficam no gatilho dele.
+`shared.web`. O extrato lê o kernel por cursor `id` com `desc` default e `asc` para
+auditoria (ADR-013); soft delete foi adiado (ADR-014).
+**Próximo foco:** D13 — arquitetura de erros curada; o gatilho “todos os slices + e2e
+verde” foi atingido. R10 continua gate humano.
 
 ## G — gates de publicação
 
@@ -20,21 +22,19 @@ limpam com `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` 
 
 ## D — débitos abertos
 
-- [ ] **D5** Soft delete de conta — gatilho: extrato.
+- [ ] **D5** Soft delete de conta — adiado por ADR-014; gatilho: produto/auditoria
+      precisar desativar ou continuar lendo uma conta com histórico.
 - [ ] **D7** `updated_at` autoritativo no banco (trigger) — gatilho: auditoria.
-- [ ] **D8** BDD da jornada — gatilho: extrato. O e2e da transferência foi adiado para o
-      extrato (D20) e não conta como BDD.
-- [ ] **D9** Cobertura de timestamps — gatilho: extrato.
 - [ ] **D13** Arquitetura de erros curada — `DomainException`, `NoResourceFoundException` →
       404, `traceId`, `include-message/stacktrace=never`, auditoria de mensagens. Gatilho:
       todos os slices encerrados + e2e verde.
 - [ ] **D15** PATCH sem semântica parcial — gatilho: demanda real.
-- [ ] **D20** E2E da jornada de transferência — adiado para o extrato: um smoke agora
-      duplicaria `TransferHappyPathIT`/ITs de transferência e, sem extrato, não provaria
-      a auditabilidade nem a ordem do ledger. Gatilho: extrato, junto com D8 (ADR-012).
+- [ ] **D21** Camada de enriquecimento do extrato — nome/descrição da contraparte para
+      humano/UI, testes unitários e apresentação. Gatilho subjetivo: conclusão do projeto
+      core; não bloqueia o fechamento funcional atual.
 
-Fechados ou absorvidos: **D4, D6, D12, D14, D16, D18, D19**; **D11** superseded por
-R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
+Fechados ou absorvidos: **D4, D6, D8, D9, D12, D14, D16, D18, D19, D20**; **D11**
+superseded por R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
 
 ## Slices encerrados
 
@@ -50,6 +50,8 @@ R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
   [`slice-explicit-ledger-dependency`](docs/history/slice-explicit-ledger-dependency.md)
 - `transfers` TR0–TR5 — fechado 2026-11-22 ·
   [`slice-transfers`](docs/history/slice-transfers.md)
+- `statements` ST0–ST5 — fechado 2026-11-24 ·
+  [`slice-statements`](docs/history/slice-statements.md)
 - review externa — 2026-11-08 ·
   [`review-externa-2026-11-08`](docs/history/review-externa-2026-11-08.md)
 

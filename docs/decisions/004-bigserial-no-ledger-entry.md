@@ -25,6 +25,9 @@ por UUID cru (sem `@ManyToOne`).
 ## Consequências
 
 - Batching desabilitado no `ledger_entry` por design; read-back por id.
+- O slice `statements` usa `(account_id, id)` com cursor exclusivo em `desc` e `asc`; o
+  `entryId` exposto é o próprio BIGSERIAL, então o volume global do ledger também fica
+  visível (ADR-013).
 - R10 é gate de publicação, não de código.
 
 ## Gatilho de reabertura
