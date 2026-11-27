@@ -3,9 +3,9 @@
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
 **Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; passo 6 em
-andamento. D22 pago em 2026-11-27; próximo: interação depósito × transferência na mesma
-conta e D23/D13.
-**Suíte:** 15 unit/contexto / 47 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
+andamento. D22 pago e interação depósito × transferência coberta em 2026-11-27; próximo:
+D23/D13.
+**Suíte:** 15 unit/contexto / 48 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
 O desvio é conhecido; a primeira jornada e2e/BDD está no extrato.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; depósito e
@@ -15,11 +15,10 @@ limpam com `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` 
 `shared.web`. O extrato lê o kernel por cursor `id` com `desc` default e `asc` para
 auditoria (ADR-013); soft delete foi adiado (ADR-014).
 **Próximo foco:** passo 6 do roteiro — concorrência com o happy path fechado: drenagem
-competitiva coberta e D22 pago; restam a interação depósito × transferência na mesma conta
-e o conflito otimista fora dos retries (D23), absorvido pelo D13. D13 tem o gatilho
-atingido e entra antes do passo 7. Passo 7 — envelope: CI (`verify` no push/PR),
-`prometheus` e README alinhado no `statements` já existem; resta a revisão final e o gate
-humano R10.
+competitiva, D22 e interação depósito × transferência na mesma conta cobertas; resta o
+conflito otimista fora dos retries (D23), absorvido pelo D13. D13 tem o gatilho atingido e
+entra antes do passo 7. Passo 7 — envelope: CI (`verify` no push/PR), `prometheus` e README
+alinhado no `statements` já existem; resta a revisão final e o gate humano R10.
 
 ## G — gates de publicação
 

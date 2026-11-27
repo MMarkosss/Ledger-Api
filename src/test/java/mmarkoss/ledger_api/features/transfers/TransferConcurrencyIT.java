@@ -25,6 +25,13 @@ class TransferConcurrencyIT extends TransferITSupport {
     private static final String HOLDER_THIRD = "Ana Lima";
     private static final String DOC_THIRD = "33333333333";
 
+    private int depositarStatus(UUID accountId, String key, String amount) {
+        return depositar(accountId, key, amount)
+                .returnResult()
+                .getStatus()
+                .value();
+    }
+
     private long transferencias() {
         return jdbc.queryForObject(
                 "select count(*) from transaction where type = 'TRANSFER'",
@@ -151,6 +158,24 @@ class TransferConcurrencyIT extends TransferITSupport {
         assertThat(lancamentos()).isEqualTo(1);
         assertThat(saldo(source)).isEqualByComparingTo("100");
         assertThat(saldo(destination)).isEqualByComparingTo("0");
+    }
+
+    @Test
+    @DisplayName("Depósito e transferência concorrentes na mesma conta preservam saldo e lançamentos")
+    void deveSerializarDepositoETransferenciaNaMesmaConta() throws Exception {
+        UUID source = criarConta(HOLDER_SOURCE, DOC_SOURCE);
+        UUID destination = criarConta(HOLDER_DESTINATION, DOC_DESTINATION);
+        depositar(source, "dep-inicial", "100.00").expectStatus().isCreated();
+
+        List<Integer> statuses = executarJuntos(
+                () -> depositarStatus(source, "dep-concorrente", "50.00"),
+                () -> transferirStatus(source, destination, "trf-concorrente", "30.00"));
+
+        assertThat(statuses).containsExactlyInAnyOrder(201, 201);
+        assertThat(transferencias()).isEqualTo(1);
+        assertThat(lancamentos()).isEqualTo(4);
+        assertThat(saldo(source)).isEqualByComparingTo("120");
+        assertThat(saldo(destination)).isEqualByComparingTo("30");
     }
 
     @Test

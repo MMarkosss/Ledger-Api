@@ -71,10 +71,12 @@ ledger.
 - O lock timeout padrão é `2s`, configurável por `LEDGER_TRANSFER_LOCK_TIMEOUT`; o `409`
   de concorrência é retryable e distinto do `IDEMPOTENCY_CONFLICT`.
 
-## Atualização 2026-11-27 — D22
+## Atualização 2026-11-27 — D22 e C1
 
 - O `lock_timeout` deixou de ser global por conexão (`connection-init-sql`) e passou a ser
   aplicado por `SET LOCAL` na transação da transferência.
 - Depósitos e leituras não herdam o timeout; `TransferConcurrencyIT` cobre um depósito
   bloqueado que espera além do timeout da transferência e conclui após a liberação.
+- C1 coberto: depósito e transferência concorrentes na mesma conta preservam saldo e
+  lançamentos (`TransferConcurrencyIT`).
 - ADR-012, README, mapa de decisões e TODO sincronizados.
