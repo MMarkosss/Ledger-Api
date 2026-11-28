@@ -10,7 +10,7 @@
 | # | Achado | Estado |
 |---|---|---|
 | A10 | Advice mapeia `DataIntegrityViolationException` por tipo com mensagem fixa — mente no DELETE (FK vira "Documento já cadastrado") e mentiria no CHECK ("Documento" para saldo) | pago por R1 (tradução no service) |
-| A11 | `handleFallback` engole exceção sem log — todo 500 é buraco negro | interino pago por R2; arquitetura curada = D13 |
+| A11 | `handleFallback` engole exceção sem log — todo 500 é buraco negro | interino pago por R2; curado por D13/ADR-015 |
 | A12 | `postgres:latest` no Testcontainers × V1 exige `uuidv7()` (PG18+) — migration explode fora do PG18 | pago por R3 |
 | A13 | properties sem `ddl-auto=validate` / `open-in-view=false` / exposição actuator — Prometheus é código morto | pago por R4 |
 | A14 | Invariantes fora do agregado: operator é dono do saldo (lança `IllegalArgumentException` → 500 via fallback), `applyDelta` nu aceita `-999999`, updater é builder-mutador com regra mais frouxa que o DTO (não-branco vs 3–80) | pago por R5 (debate SRP: entidade dona; defesa em profundidade na ordem certa) |
@@ -41,7 +41,8 @@
   SQLState (`23505` × `23503`) + nome da constraint via `PSQLException`; após o catch a
   transação está condenada — traduzir e lançar.
 - **R2** Fallback do advice com log — `log.error("{} {}", method, uri, ex)`: stack completa
-  no log do servidor; resposta ao cliente permanece mensagem estática. Interino do D13.
+  no log do servidor; resposta ao cliente permanece mensagem estática. Interino do D13;
+  contrato final no ADR-015.
 - **R3** Pin `postgres:18` no `TestcontainersConfiguration` (hoje `postgres:latest`; a V1
   usa `uuidv7()`, que só existe no PG18+ — fora dele a migration explode com
   `function uuidv7() does not exist`). **Executado em 2026-11-09.**
@@ -86,7 +87,8 @@
 
 ## Débitos que nasceram desta review
 
-- **D13** — arquitetura de erros curada (de A11/R2).
+- **D13** — arquitetura de erros curada (de A11/R2) — **pago em 2026-11-27** pelo
+  ADR-015, absorvendo D23.
 - **D14** — ADR/README do dono do ID (de A21).
 - **D15** — PATCH sem semântica parcial (de A18).
 - **D16** — README das decisões (de A7/A16/A20/D14).

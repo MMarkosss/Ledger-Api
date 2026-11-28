@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | [001](001-invariantes-na-entidade.md) | Invariantes na entidade `Account` | accepted (emenda 010 revertida por 011) | `features.accounts.Account` + `AccountTest`; `credit/debit` públicos; `TransferPairingTest` cobre o pareamento | D4 fechado com R5; pareamento com lançamento é convenção do use case; D19 pago |
 | [002](002-dono-do-id.md) | Dono do ID | accepted | `@UuidGenerator(VERSION_7)` + `DEFAULT uuidv7()` na V1; README | R10 é gate externo de publicação |
-| [003](003-traducao-de-constraint-no-service.md) | Tradução de constraint no service | accepted | `AccountService` + `ConstraintNames`/`LedgerConstraintNames` + `ApiExceptionHandler` | D13 cura a arquitetura de erros no futuro |
+| [003](003-traducao-de-constraint-no-service.md) | Tradução de constraint no service | accepted | `AccountService` + `ConstraintNames`/`LedgerConstraintNames` + `ApiExceptionHandler` | D13 pago em 2026-11-27; fallback e contrato de erro curados no ADR-015 |
 | [004](004-bigserial-no-ledger-entry.md) | BIGSERIAL no `ledger_entry` | accepted | `LedgerEntry` + `V1`; `V2` remove índice redundante; `StatementService` usa `(account_id, id)` | R10 é gate externo de publicação; o `entryId` global expõe volume (ADR-013) |
 | [005](005-fk-como-arbitro-do-delete.md) | FK como árbitro do DELETE | accepted | `AccountService` + `LedgerEntryRepository.existsByAccountId` + FK da V1 | TOCTOU aceito; dependência accounts -> ledger explícita |
 | [006](006-idempotencia-hash-e-replay.md) | Idempotência: hash + replay | accepted | `DepositAttemptService` + `TransferService` + `IdempotencyHash` + `insertIfAbsent` + ITs de depósito/transferência | P9/P11/P13 e TR3 fechados; `InvalidIdempotencyKeyException` em `shared.web` |
@@ -22,6 +22,7 @@
 | [012](012-transferencia-duas-pernas-lock-deterministico.md) | Transferência: duas pernas e lock determinístico | accepted | `features.transfers` + `TransferPair` + lock `PESSIMISTIC_WRITE` ordenado por UUID + dois `ledger_entry` + timeout `409` retryable | TR0–TR5 fechados; D19 pago; D20 pago no extrato; D22 pago (timeout local); B1/B2 rejeitadas; sem migração |
 | [013](013-extrato-leitura-por-conta-cursor-e-auditoria.md) | Extrato: leitura por conta, cursor e ordem auditável | accepted | `features.statements` + `Slice<LedgerEntry>` + `cursor`/`limit` + `desc` default e `asc` auditoria + `Statement*IT` + Cucumber e2e conciliando C/D | D8/D20 pagos; e2e cobre espelhamento, cadeia e saldo final; `entryId` global expõe volume; sem migração |
 | [014](014-ciclo-de-vida-da-conta-hard-delete-e-soft-delete.md) | Ciclo de vida da conta: hard delete e soft delete adiado | accepted | `DELETE` guard + FK; sem `deleted_at` | D5 adiado; gatilho: desativar/ler conta com histórico |
+| [015](015-arquitetura-de-erros-correlacao-e-conflito-otimista.md) | Arquitetura de erros, correlação e conflito otimista | accepted | `DomainException` + `ProblemDetail` + `TraceIdFilter` + `ApiExceptionHandler` + `ApiExceptionHandlerTest`/`ErrorContractIT` | D13 e D23 pagos; `X-Request-Id`/`traceId`; rota inexistente 404; conflito otimista 409 retryable; sem migração |
 
 ## Checklist de fechamento
 

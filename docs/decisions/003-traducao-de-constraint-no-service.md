@@ -1,6 +1,6 @@
 # ADR-003 — Tradução de constraint no service
 
-**Status:** accepted — execução R1; interino R2; arquitetura curada = D13
+**Status:** accepted — execução R1; interino R2; arquitetura curada pelo ADR-015 (D13)
 **Data:** 2026-11-09
 **Origem:** A10 / A5 / R1
 
@@ -35,8 +35,8 @@ Após o catch a transação está condenada: traduzir e lançar.
 
 ## Consequências
 
-- Fallback loga `method` + URI + stack (R2) e responde mensagem estática; D13 cura o
-  contrato `DomainException`, `NoResourceFoundException` → 404 e `traceId`.
+- Fallback loga `method` + URI + stack (R2) e responde mensagem estática; D13 foi pago
+  pelo ADR-015 com `DomainException`, `NoResourceFoundException` → 404 e `traceId`.
 - Violação de CHECK que chega ao banco é bug de camada superior → 500 honesto + log,
   nunca 422.
 

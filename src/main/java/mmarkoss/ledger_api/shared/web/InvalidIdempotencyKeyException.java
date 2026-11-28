@@ -1,7 +1,11 @@
 package mmarkoss.ledger_api.shared.web;
 
-public final class InvalidIdempotencyKeyException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public final class InvalidIdempotencyKeyException extends DomainException {
     public InvalidIdempotencyKeyException() {
-        super("Header Idempotency-Key é obrigatório");
+        super(HttpStatus.BAD_REQUEST,
+                "Requisição inválida",
+                "Header Idempotency-Key é obrigatório");
     }
 }

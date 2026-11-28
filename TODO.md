@@ -2,10 +2,9 @@
 
 > Estado + próximo. Política: `PROCESS.md` · Decisões: `docs/decisions/` · História: `docs/history/`.
 
-**Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; passo 6 em
-andamento. D22 pago e interação depósito × transferência coberta em 2026-11-27; próximo:
-D23/D13.
-**Suíte:** 15 unit/contexto / 48 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
+**Estado:** nenhum slice ativo — `statements` encerrado em 2026-11-24; passo 6 concluído em
+2026-11-27 com D22, C1 e D13/D23. Próximo: passo 7 — envelope.
+**Suíte:** 17 unit/contexto / 51 integração / 1 e2e — alvo 70/20/10 (`PROCESS.md`).
 O desvio é conhecido; a primeira jornada e2e/BDD está no extrato.
 **Contexto:** `Account` em `features/accounts`; `features/ledger` é kernel separado
 (ADR-007/011). A dependência `accounts -> ledger` é explícita na deleção; depósito e
@@ -13,12 +12,12 @@ transferência orquestram conta + lançamento; `balanceAfter` é snapshot do use
 invariante. `LedgerEntry` continua append-only (ADR-009); DTOs de conta unificados; ITs
 limpam com `TRUNCATE` sem `CASCADE` (ADR-008); `InvalidIdempotencyKeyException` fica em
 `shared.web`. O extrato lê o kernel por cursor `id` com `desc` default e `asc` para
-auditoria (ADR-013); soft delete foi adiado (ADR-014).
-**Próximo foco:** passo 6 do roteiro — concorrência com o happy path fechado: drenagem
-competitiva, D22 e interação depósito × transferência na mesma conta cobertas; resta o
-conflito otimista fora dos retries (D23), absorvido pelo D13. D13 tem o gatilho atingido e
-entra antes do passo 7. Passo 7 — envelope: CI (`verify` no push/PR), `prometheus` e README
-alinhado no `statements` já existem; resta a revisão final e o gate humano R10.
+auditoria (ADR-013); soft delete foi adiado (ADR-014). Erros de feature usam
+`DomainException` + `ProblemDetail`; `TraceIdFilter` propaga `X-Request-Id`/`traceId` e o
+fallback é estático (ADR-015).
+**Próximo foco:** passo 7 do roteiro — envelope: CI (`verify` no push/PR), `prometheus` e
+README alinhado já existem; resta a revisão final do envelope e o gate humano R10.
+D13/D23 fechados em 2026-11-27.
 
 ## G — gates de publicação
 
@@ -30,19 +29,13 @@ alinhado no `statements` já existem; resta a revisão final e o gate humano R10
 - [ ] **D5** Soft delete de conta — adiado por ADR-014; gatilho: produto/auditoria
       precisar desativar ou continuar lendo uma conta com histórico.
 - [ ] **D7** `updated_at` autoritativo no banco (trigger) — gatilho: auditoria.
-- [ ] **D13** Arquitetura de erros curada — `DomainException`, `NoResourceFoundException` →
-      404, `traceId`, `include-message/stacktrace=never`, auditoria de mensagens; absorve
-      D23. Gatilho: todos os slices encerrados + e2e verde.
 - [ ] **D15** PATCH sem semântica parcial — gatilho: demanda real.
 - [ ] **D21** Camada de enriquecimento do extrato — nome/descrição da contraparte para
       humano/UI, testes unitários e apresentação. Gatilho subjetivo: conclusão do projeto
       core; não bloqueia o fechamento funcional atual.
-- [ ] **D23** Conflito otimista fora dos retries — `ObjectOptimisticLockingFailureException`
-      (ex.: renome concorrente a um depósito) vira 500. Decisão 2026-11-27: absorver no
-      D13, que mapeia para `409 CONCURRENCY_CONFLICT` retryable.
 
-Fechados ou absorvidos: **D4, D6, D8, D9, D12, D14, D16, D18, D19, D20, D22**; **D11**
-superseded por R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
+Fechados ou absorvidos: **D4, D6, D8, D9, D12, D13, D14, D16, D18, D19, D20, D22, D23**;
+**D11** superseded por R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
 
 ## Slices encerrados
 
@@ -60,6 +53,8 @@ superseded por R5/ADR-001. Fora da lista (história): **D1, D2, D3, D10, D17**.
   [`slice-transfers`](docs/history/slice-transfers.md)
 - `statements` ST0–ST5 — fechado 2026-11-24 ·
   [`slice-statements`](docs/history/slice-statements.md)
+- `errors` D13/D23 — fechado 2026-11-27 ·
+  [`slice-errors`](docs/history/slice-errors.md)
 - review externa — 2026-11-08 ·
   [`review-externa-2026-11-08`](docs/history/review-externa-2026-11-08.md)
 

@@ -1,7 +1,14 @@
 package mmarkoss.ledger_api.features.ledger;
 
-public final class IdempotencyConflictException extends RuntimeException {
+import mmarkoss.ledger_api.shared.web.DomainException;
+import org.springframework.http.HttpStatus;
+
+public final class IdempotencyConflictException extends DomainException {
     public IdempotencyConflictException() {
-        super("Idempotency-Key reutilizada com corpo diferente");
+        super(HttpStatus.CONFLICT,
+                "Conflito de idempotência",
+                "Idempotency-Key reutilizada com corpo diferente",
+                "IDEMPOTENCY_CONFLICT",
+                false);
     }
 }

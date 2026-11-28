@@ -17,7 +17,8 @@ entries, idempotent writes, and explicit concurrency behavior.
 - Atomic `transaction` + `ledger_entry` writes.
 - Idempotency via the `Idempotency-Key` header.
 - Optimistic locking for deposits; deterministic pessimistic locking for transfers.
-- Domain errors mapped to explicit HTTP statuses.
+- Domain errors mapped to explicit HTTP statuses with request correlation via
+  `X-Request-Id`/`traceId`.
 - Flyway migrations, Testcontainers-backed integration tests and a Cucumber e2e journey.
 
 ## Stack
@@ -184,6 +185,21 @@ current balance is not included: each line carries its historical `balanceAfter`
 `BIGSERIAL`, so exposing it also exposes the ledger's volume/rate; that consequence is
 accepted in ADR-013.
 
+### Errors
+
+Errors use RFC 9457 `ProblemDetail`:
+
+- `title`, `status`, `detail` and `traceId` are always present;
+- `code` and `retryable` are added when the error has a stable contract;
+- `X-Request-Id` is accepted when it has a safe format, otherwise generated, and is
+  echoed in the response and in `traceId`;
+- unknown routes return `404 Recurso não encontrado`;
+- `IDEMPOTENCY_CONFLICT` and `CONCURRENCY_CONFLICT` keep their existing `409` contract;
+- optimistic conflicts that escape retries, including a concurrent rename, return
+  `409 CONCURRENCY_CONFLICT` with `retryable=true`;
+- unexpected failures return `500 Erro interno` with a static message; `message`,
+  `stackTrace` and exception details are never included in the response.
+
 ## Design decisions
 
 The full records live in [`docs/decisions`](docs/decisions):
@@ -214,6 +230,9 @@ The full records live in [`docs/decisions`](docs/decisions):
 - **IDs** — `account` and `transaction` use app-side UUIDv7; `ledger_entry` uses
   `BIGSERIAL` because strict statement ordering is worth more than batching there.
   The PostgreSQL `DEFAULT uuidv7()` remains a floor for non-app writers.
+- **Error contract** — feature exceptions extend `DomainException` with status, title,
+  optional code/retryable; one advice method materializes `ProblemDetail`, and
+  `TraceIdFilter` correlates the request via `X-Request-Id`/`traceId` (ADR-015).
 - **Constraint translation** — the service translates the constraint it knows
   (`23505` / `23503` plus constraint name); the generic advice logs the stack and returns
   a static response.
